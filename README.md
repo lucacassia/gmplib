@@ -15,11 +15,11 @@ The construction follows:
 
 ## Mathematical background
 
-The library works with **multi-partitions** $\boldsymbol{\lambda} = (\lambda^{(0)}, \ldots, \lambda^{(N-1)})$ — N-tuples of integer partitions. The Generalized Macdonald function $G_{\boldsymbol{\lambda}}$ is defined as the unique eigenfunction of the zero-mode operator $x^+(0)$:
+The library works with **multi-partitions** $\boldsymbol{\lambda} = (\lambda^{(0)}, \ldots, \lambda^{(N-1)})$ — N-tuples of integer partitions. The Generalized Macdonald function $G_{\boldsymbol{\lambda}}$ is defined as the unique eigenfunction of the zero-mode operator $x^+_0$:
 
-$$x^+_0\, G_{\boldsymbol{\lambda}} = \mathrm{eigenvalue}(\boldsymbol{\lambda})\, G_{\boldsymbol{\lambda}}, \qquad \mathrm{eigenvalue}(\boldsymbol{\lambda}) = \sum_{i=1}^{N} u_i\, x_{\lambda^{(i)}}$$
+$$x^+_0 \cdot G_{\boldsymbol{\lambda}} = \mathrm{eigenvalue}(\boldsymbol{\lambda})\cdot G_{\boldsymbol{\lambda}}, \qquad \mathrm{eigenvalue}(\boldsymbol{\lambda}) = \sum_{i=0}^{N-1} u_i x_{\lambda^{(i)}}$$
 
-expanded in the tensor product of Macdonald P-functions. The deformation parameters satisfy $q_1 q_2 q_3 = 1$ with $q_1 = q$, $q_2 = 1/t$, $q_3 = t/q$.
+expanded in the tensor product of ordinary Macdonald P-functions. The deformation parameters satisfy $q_1 q_2 q_3 = 1$ with $q_1 = q$, $q_2 = 1/t$, $q_3 = t/q$.
 
 ---
 
@@ -67,11 +67,11 @@ sage: to_gmp(G)
 | Function | Description |
 |----------|-------------|
 | `GMP(lam)` | Compute $G_{\boldsymbol{\lambda}}$ in the tensor product of Macdonald P-bases |
-| `GMQ(lam)` | Compute the dual GMP $\tilde{G}_{\boldsymbol{\lambda}}$ (Q-type) |
+| `GMQ(lam)` | Compute the dual GMP w.r.t. the appropriate scalar product |
 | `tildeGMP(lam)` | Normalised GMP: $G_{\boldsymbol{\lambda}}$ divided by the product of principal specialisations |
 | `barGMP(lam)` | GMP normalised by its own evaluation at the epsilon arguments |
 | `GMK(lam)` | Generalised Macdonald K-function |
-| `GMPast(lam)` | Dual (starred) GMP $G^*_{\boldsymbol{\lambda}}$ |
+| `GMPast(lam)` | Starred (inhomogenous) GMP $G^*_{\boldsymbol{\lambda}}$ |
 | `iGMP(lam)` | Inverted GMP with reversed spectral parameters |
 
 ### GMP coefficients
@@ -88,13 +88,12 @@ sage: to_gmp(G)
 | Function | Description |
 |----------|-------------|
 | `pieri(lam)` | Verify the $e_1$ Pieri rule for $G_{\boldsymbol{\lambda}}$ |
-| `pieriTest(m, lam)` | Verify the degree-$m$ Pieri rule |
+| `pieriTest(m, lam)` | Verify the degree-m Pieri rule |
 | `pieriTestDual(m, nu)` | Verify the dual (skew) Pieri rule |
 | `pieri_set(m, lam)` | Multi-partitions reachable from $\boldsymbol{\lambda}$ by adding $m$ boxes |
 | `pieri_set_minus(m, nu)` | Multi-partitions reachable by removing $m$ boxes |
 | `psi_prime_PE(nu, lam)` | Elementary Pieri vertex coefficient $\psi'(\nu, \lambda)$ |
 | `phi_prime_PE(nu, lam)` | Homogeneous Pieri vertex coefficient $\phi'(\nu, \lambda)$ |
-| `psi2_prime_PE(nu, lam)` | Dual Pieri vertex coefficient $\psi_2'(\nu, \lambda)$ |
 
 ### Vertex operators and algebra action
 
