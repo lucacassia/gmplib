@@ -122,7 +122,7 @@ sage: to_gmp(G)
 | `DET(x)` | Determinant factor of a Laurent polynomial |
 | `epsilon(part)` | Epsilon specialisation argument for a partition |
 | `eigenvalue(lam)` | Eigenvalue of $G_{\boldsymbol{\lambda}}$ under $x^{+}_0$ |
-| `chi2d(lam)` | Content sum of a 2d partition, $\chi_\lam = \sum_{(i,j)\in\lambda}q_1^{j-1}q_2^{i-1}$ |
+| `chi2d(lam)` | Content sum of a 2d partition, $\chi_\lambda = \sum_{(i,j)\in\lambda}q_1^{j-1}q_2^{i-1}$ |
 | `x2d(lam)` | Defined as $x_\lambda=1-(1-q_1)(1-q_2)\chi_\lambda$ |
 | `mPartitions(N, k)` | All N-tuples of partitions of total weight $k$ |
 
