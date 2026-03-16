@@ -146,7 +146,7 @@ The repository includes several notebooks demonstrating the library:
 |----------|---------|
 | `GHT.ipynb` | Intertwiners and the GHT identity for N = 1, 2, 3 |
 | `cauchy.ipynb` | Cauchy identity for GMPs |
-| `conjecture.ipynb` | Checks of conjectured identities |
+| `conjecture3.1.ipynb` | Checks of the conjectured identity 3.1 |
 | `level-2.ipynb` | Level-2 representations |
 | `pieri.ipynb` | Pieri rules and dual Pieri rules |
 
