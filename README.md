@@ -93,7 +93,6 @@ sage: to_gmp(G)
 | `pieri_set(m, lam)` | Multi-partitions reachable from $\boldsymbol{\lambda}$ by adding $m$ boxes |
 | `pieri_set_minus(m, nu)` | Multi-partitions reachable by removing $m$ boxes |
 | `psi_prime_PE(nu, lam)` | Elementary Pieri vertex coefficient $\psi'(\nu, \lambda)$ |
-| `phi_prime_PE(nu, lam)` | Homogeneous Pieri vertex coefficient $\phi'(\nu, \lambda)$ |
 
 ### Vertex operators and algebra action
 
@@ -123,8 +122,8 @@ sage: to_gmp(G)
 | `DET(x)` | Determinant factor of a Laurent polynomial |
 | `epsilon(part)` | Epsilon specialisation argument for a partition |
 | `eigenvalue(lam)` | Eigenvalue of $G_{\boldsymbol{\lambda}}$ under $x^{+}_0$ |
-| `chi2d(lam)` | content sum of a 2d partition |
-| `x2d(lam)` | Normalised 2d content polynomial |
+| `chi2d(lam)` | Content sum of a 2d partition, $\chi_\lam = \sum_{(i,j)\in\lambda}q_1^{j-1}q_2^{i-1}$ |
+| `x2d(lam)` | Defined as $x_\lambda=1-(1-q_1)(1-q_2)\chi_\lambda$ |
 | `mPartitions(N, k)` | All N-tuples of partitions of total weight $k$ |
 
 ### Cache management
