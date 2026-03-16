@@ -17,7 +17,7 @@ The construction follows:
 
 The library works with **multi-partitions** $\boldsymbol{\lambda} = (\lambda^{(0)}, \ldots, \lambda^{(N-1)})$ — N-tuples of integer partitions. The Generalized Macdonald function $G_{\boldsymbol{\lambda}}$ is defined as the unique eigenfunction of the zero-mode operator $x^{+}_0$:
 
-$$x^{+}_0 \cdot G_{\boldsymbol{\lambda}} = \mathrm{eigenvalue}(\boldsymbol{\lambda})\cdot G_{\boldsymbol{\lambda}}, \qquad \mathrm{eigenvalue}(\boldsymbol{\lambda}) = \sum_{i=0}^{N-1} u_i x_{\lambda^{(i)}}$$
+$$\rho^{(N,0)}_{u_0,\dots,u_{N-1}}(x^{+}_0) \cdot G_{\boldsymbol{\lambda}} = \mathrm{eigenvalue}(\boldsymbol{\lambda})\cdot G_{\boldsymbol{\lambda}}, \qquad \mathrm{eigenvalue}(\boldsymbol{\lambda}) = \sum_{i=0}^{N-1} u_i x_{\lambda^{(i)}}$$
 
 expanded in the tensor product of ordinary Macdonald P-functions. The deformation parameters satisfy $q_1 q_2 q_3 = 1$ with $q_1 = q$, $q_2 = 1/t$, $q_3 = t/q$.
 
