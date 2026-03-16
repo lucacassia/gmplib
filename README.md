@@ -15,9 +15,9 @@ The construction follows:
 
 ## Mathematical background
 
-The library works with **multi-partitions** $\boldsymbol{\lambda} = (\lambda^{(0)}, \ldots, \lambda^{(N-1)})$ — N-tuples of integer partitions. The Generalized Macdonald function $G_{\boldsymbol{\lambda}}$ is defined as the unique eigenfunction of the zero-mode operator $x^+_0$:
+The library works with **multi-partitions** $\boldsymbol{\lambda} = (\lambda^{(0)}, \ldots, \lambda^{(N-1)})$ — N-tuples of integer partitions. The Generalized Macdonald function $G_{\boldsymbol{\lambda}}$ is defined as the unique eigenfunction of the zero-mode operator $x^{+}_0$:
 
-$$x^+_0 \cdot G_{\boldsymbol{\lambda}} = \mathrm{eigenvalue}(\boldsymbol{\lambda})\cdot G_{\boldsymbol{\lambda}}, \qquad \mathrm{eigenvalue}(\boldsymbol{\lambda}) = \sum_{i=0}^{N-1} u_i x_{\lambda^{(i)}}$$
+$$x^{+}_0 \cdot G_{\boldsymbol{\lambda}} = \mathrm{eigenvalue}(\boldsymbol{\lambda})\cdot G_{\boldsymbol{\lambda}}, \qquad \mathrm{eigenvalue}(\boldsymbol{\lambda}) = \sum_{i=0}^{N-1} u_i x_{\lambda^{(i)}}$$
 
 expanded in the tensor product of ordinary Macdonald P-functions. The deformation parameters satisfy $q_1 q_2 q_3 = 1$ with $q_1 = q$, $q_2 = 1/t$, $q_3 = t/q$.
 
@@ -45,7 +45,7 @@ sage: load("gmplib.py")
 # Compute the GMP for the bi-partition ((2,1), (1)) at N=2
 sage: G = GMP(([2,1], [1]))
 
-# Verify the eigenfunction equation x^+_0 G = eigenvalue * G
+# Verify the eigenfunction equation x^{+}_0 G = eigenvalue * G
 sage: testEigenfunction(([2,1], [1]))
 True
 
@@ -99,8 +99,8 @@ sage: to_gmp(G)
 
 | Function | Description |
 |----------|-------------|
-| `xplus(k, x)` | Full N-component raising generator $x^+_k$ |
-| `xminus(k, x)` | Full N-component lowering generator $x^-_k$ |
+| `xplus(k, x)` | Full N-component raising generator $x^{+}_k$ |
+| `xminus(k, x)` | Full N-component lowering generator $x^{-}_k$ |
 | `LAM(i, k, x)` | Twisted positive operator $\Lambda_{i,k}$ (i-th component) |
 | `LAMast(i, k, x)` | Twisted negative operator $\Lambda^*_{i,k}$ |
 | `xplus_k(k, x)` | Single-factor raising mode |
@@ -122,7 +122,7 @@ sage: to_gmp(G)
 | `PE(x)` | Plethystic exponential |
 | `DET(x)` | Determinant factor of a Laurent polynomial |
 | `epsilon(part)` | Epsilon specialisation argument for a partition |
-| `eigenvalue(lam)` | Eigenvalue of $G_{\boldsymbol{\lambda}}$ under $x^+_0$ |
+| `eigenvalue(lam)` | Eigenvalue of $G_{\boldsymbol{\lambda}}$ under $x^{+}_0$ |
 | `chi2d(lam)` | content sum of a 2d partition |
 | `x2d(lam)` | Normalised 2d content polynomial |
 | `mPartitions(N, k)` | All N-tuples of partitions of total weight $k$ |

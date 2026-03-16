@@ -452,27 +452,25 @@ def epsilon(part,power=1):
 
         epsilon(part) = sum_{i} q^{part[i]} * t^{-i-1}  +  t^{-len(part)-1} / (1 - 1/t)
 
-    with ``q -> q^power``, ``t -> t^power``.
-
     Evaluating a Macdonald P-function at ``epsilon(mu)`` gives the specialisation
-    appearing in the Cauchy identity and Pieri coefficients.
+    appearing in the Macdonald-Koornwinder duality.
 
     Parameters
     ----------
-    part : list or Partition
-    power : int or ring element, optional
+    part : Partition
+    power : int, optional
         Rescaling exponent applied to both ``q`` and ``t`` (default 1).
 
     Returns
     -------
-    ring element
+    rational function
     """
     res = sum(q**(part[i])*t**(-i-1) for i in range(len(part))) + t**(-len(part)-1)/(1-1/t)
     return res.subs(q=q**power,t=t**power)
 
 def eigenvalue(lam):
     r"""
-    Compute the eigenvalue of the GMP ``G_lam`` under the zero-mode ``x^+(0)``.
+    Compute the eigenvalue of the GMP ``G_lam`` under the zero-mode ``x^{+}_0``.
 
     For an N-tuple of partitions ``lam = (lam_0,...,lam_{N-1})``:
 
@@ -485,21 +483,18 @@ def eigenvalue(lam):
 
     Returns
     -------
-    ring element
+    rational function
         Rational function of q, t, u_i.
-
-    See Also
-    --------
-    x2d, testEigenfunction
     """
     return sum(u[i]*x2d(lam[i]) for i in range(len(lam)))
 
 def w(mu):
     r"""
-    Compute the Macdonald weight ``w(mu)`` appearing in Pieri-type formulas.
+    Compute the Macdonald weight ``w(mu)`` appearing in the Cauchy identity
+    for modified Macdonald functions.
 
-    This is the coefficient of ``mu`` when expanding
-    ``e_{|mu|}(Ht_1 / (1-q1)(1-q2))``.
+    This is the coefficient of ``Ht(mu)`` when expanding
+    ``e_{|mu|}[ X / (1-q1)(1-q2) ]``.
 
     Parameters
     ----------
@@ -507,17 +502,20 @@ def w(mu):
 
     Returns
     -------
-    ring element
+    rational function
+        Rational function of q, t.
     """
     return 1/e[sum(mu)](Ht[1]/(1-q1)/(1-q2)).coefficient(mu)
 
 def chi2d(lam,power=1):
     r"""
-    Compute the 2d content sum of a partition.
+    Compute the 2d content polynomial of a partition. Also the K-theoretic
+    character of the rank ``|lam|`` tautological sheaf over the Hilbert scheme of
+    points on A^2 pulled-back to the fixed-point ``lam``.
 
     For a partition ``lam``, this sums over all boxes (i, j) in the Young diagram:
 
-        chi2d(lam) = sum_{i,j in lam}  q2^i * q1^j
+        chi2d(lam) = sum_{(i,j) \in lam}  q2^i * q1^j
 
     With ``power != 1``, the deformation parameters are rescaled:
     ``q1 -> q1^power``, ``q2 -> q2^power``.
@@ -525,7 +523,7 @@ def chi2d(lam,power=1):
     Parameters
     ----------
     lam : list or Partition
-    power : int or ring element, optional
+    power : int, optional
         (default 1)
 
     Returns
@@ -534,24 +532,28 @@ def chi2d(lam,power=1):
 
     See Also
     --------
-    x2d : The normalised content polynomial ``1 - (1-q1)(1-q2)*chi2d``.
+    x2d == 1 - (1-q1)(1-q2)*chi2d.
     """
     return sum(sum((q2**i*q1**j)**power for j in range(lam[i])) for i in range(len(lam)))
 
 def x2d(lam,power=1):
     r"""
-    Compute the normalised 2d content polynomial of a partition.
+    Compute the polynomial (K-theoretic character) defined as:
 
-    Defined as:
-
-        x2d(lam) = 1 - (1 - q1^power)(1 - q2^power) * chi2d(lam, power)
+        x2d(lam) = 1 - (1 - q1) * (1 - q2) * chi2d(lam)
 
     This is the building block of eigenvalues and vertex operator coefficients.
+    It also satisfies:
+
+        x2d(lam) = A(lam) - q/t * R(lam)
+
+    where ``A(lam)`` is the sum of content of boxes which can be added to ``lam``
+    and ``R(lam)`` is the sum of contents of boxes which can be removed.
 
     Parameters
     ----------
     lam : list or Partition
-    power : int or ring element, optional
+    power : int, optional
         (default 1)
 
     Returns
@@ -583,7 +585,7 @@ def PE(x):
 
     Returns
     -------
-    ring element
+    rational function
 
     Notes
     -----
@@ -630,7 +632,7 @@ def Ylam(lam,z):
 
     Returns
     -------
-    ring element
+    rational function
     """
     return PE(-x2d(lam)/z)
 
@@ -645,7 +647,7 @@ def PSIlam(lam,z):
 
     Returns
     -------
-    ring element
+    rational function
     """
     return PE((1-q3)*x2d(lam)/z)
 
@@ -655,7 +657,7 @@ def Nekrasov(lam,mu,z):
 
     Evaluates:
 
-        PE( -z * (1 - x2d(lam)*x2d(mu)^{-1}) / (1-q1)(1-q2) )
+        PE( -z * (1 - x2d(lam)*x2d(mu)^\vee) / (1-q1)(1-q2) )
 
     This factor appears in the 5d instanton partition function of SYM.
 
@@ -667,7 +669,7 @@ def Nekrasov(lam,mu,z):
 
     Returns
     -------
-    ring element
+    rational function
 
     See Also
     --------
@@ -677,14 +679,8 @@ def Nekrasov(lam,mu,z):
 
 def NekrasovJEB(lam,mu,z):
     r"""
-    Compute the Nekrasov factor in the JEB normalisation.
-
-    An alternative writing that makes the Young-tableaux combinatorics more
-    transparent:
-
-        PE( z(1-q1)(1-q2)*chi2d(lam)*chi2d(mu)^{-1}
-            - z/q3 * chi2d(lam)
-            - z * chi2d(mu)^{-1} )
+    Compute the Nekrasov factor in the JEB normalisation, i.e. the same as in the
+    article arXiv:2508.19704.
 
     Parameters
     ----------
@@ -693,7 +689,7 @@ def NekrasovJEB(lam,mu,z):
 
     Returns
     -------
-    ring element
+    rational function
 
     See Also
     --------
@@ -703,7 +699,7 @@ def NekrasovJEB(lam,mu,z):
 
 def tNek(lam,mu,z):
     r"""
-    Compute the normalised Nekrasov factor.
+    Compute the normalised Nekrasov factor, ``\tilde{N}_{\lam,\mu}(z)```.
 
     Defined as:
 
@@ -716,21 +712,21 @@ def tNek(lam,mu,z):
 
     Returns
     -------
-    ring element
+    rational function
     """
     return NekrasovJEB(lam,mu,z) / (-z/q3)**sum(lam) / DET(chi2d(lam))
 
 
 # ---------------------------------------------------------------------------
-# Pieri vertex coefficients
+# Pieri coefficients
 # ---------------------------------------------------------------------------
 
 def psi_prime_PE(nu,lam):
     r"""
-    Compute the elementary Pieri vertex coefficient ``psi'(nu, lam)``.
+    Compute the elementary Pieri coefficient ``psi'(nu, lam)``.
 
     Controls the action of the elementary Pieri operator: the coefficient with
-    which ``G_nu`` appears when ``e_1`` acts on ``G_lam`` on a single factor.
+    which ``P_nu`` appears when ``e_1`` acts on ``P_lam``.
     Requires ``|nu| >= |lam|``; returns 0 if ``|nu| < |lam|``.
 
     Parameters
@@ -739,11 +735,11 @@ def psi_prime_PE(nu,lam):
 
     Returns
     -------
-    ring element
+    rational function
 
     See Also
     --------
-    phi_prime_PE, psi2_prime_PE, pieriTest
+    psi2_prime_PE, pieriTest
     """
     nu = Partition(nu)
     lam = Partition(lam)
@@ -757,43 +753,13 @@ def psi_prime_PE(nu,lam):
             rhs = PE(-chi2d([1]*m)/t - (1-1/t)*(chi2d(nu,-1)-chi2d(lam,-1))*(chi2d(nu)-chi2d(lam)) + (chi2d(nu,-1)-chi2d(lam,-1)) * x2d(lam) ) * (e[m](epsilon([]))) * McdP(lam)(epsilon([])) / McdP(nu)(epsilon([]))
     return rhs
 
-def phi_prime_PE(nu,lam):
-    r"""
-    Compute the homogeneous Pieri vertex coefficient ``phi'(nu, lam)``.
-
-    Analogous to :func:`psi_prime_PE` but for the homogeneous generator ``h_m``
-    (equivalently the Macdonald P-function ``P_{(m)}``).
-
-    Parameters
-    ----------
-    nu, lam : list or Partition
-
-    Returns
-    -------
-    ring element
-
-    See Also
-    --------
-    psi_prime_PE
-    """
-    nu = Partition(nu)
-    lam = Partition(lam)
-    m = sum(nu)-sum(lam)
-    if m == 0:
-        rhs = 1 if nu == lam else 0
-    else:
-        if lam == []:
-            rhs = PE(-chi2d([m])*q - (1-q)*(chi2d(nu,-1)-chi2d(lam,-1))*(chi2d(nu)-chi2d(lam)) + (chi2d(nu,-1)-chi2d(lam,-1)) * x2d(lam) ) * (McdP[m](epsilon([]))) / McdP(nu)(epsilon([]))
-        else:
-            rhs = PE(-chi2d([m])*q - (1-q)*(chi2d(nu,-1)-chi2d(lam,-1))*(chi2d(nu)-chi2d(lam)) + (chi2d(nu,-1)-chi2d(lam,-1)) * x2d(lam) ) * (McdP[m](epsilon([]))) * McdP(lam)(epsilon([])) / McdP(nu)(epsilon([]))
-    return rhs
-
 def psi2_prime_PE(nu,lam):
     r"""
-    Compute the dual Pieri vertex coefficient ``psi2'(nu, lam)``.
+    Compute the elementary dual Pieri coefficient ``psi2'(nu, lam)``.
 
-    Governs the skew (dual) Pieri rule, controlling how the skew product by an
-    elementary function acts on GMPs.
+    Controls the action of the elementary Pieri operator: the coefficient with
+    which ``P_lam`` appears when ``e_1^\perp`` acts on ``P_nu``.
+    Requires ``|nu| >= |lam|``; returns 0 if ``|nu| < |lam|``.
 
     Parameters
     ----------
@@ -801,7 +767,7 @@ def psi2_prime_PE(nu,lam):
 
     Returns
     -------
-    ring element
+    rational function
 
     See Also
     --------
@@ -823,21 +789,22 @@ def alpha_N(i,nu,lam):
     r"""
     Compute the N-component Pieri transition coefficient ``alpha_N(i, nu, lam)``.
 
-    Accounts for the interaction between the i-th component (which transitions
-    ``lam[i] -> nu``) and all components *after* position i.
+    Accounts for the non-cocommutativity of the coproduct.
+    This is the coefficient that witnesses the transition ``lam[i] -> nu``
+    with ``|nu|=|lam[i]+1|``.
 
     Parameters
     ----------
     i : int
         Component index (0-indexed) at which the transition occurs.
-    nu : list or Partition
+    nu : Partition
         Target partition for component i.
-    lam : tuple of list
+    lam : tuple of Partitions
         Full N-tuple of source partitions.
 
     Returns
     -------
-    ring element
+    rational function
     """
     N = len(lam)
     return PE( (1-q3)*(chi2d(nu,-1)-chi2d(lam[i],-1))*u[i]**-1*sum(u[j]*x2d(lam[j]) for j in range(i+1,N)) )
@@ -846,16 +813,16 @@ def alpha2_N(i,nu,lam):
     r"""
     Compute the dual N-component Pieri transition coefficient ``alpha2_N(i, nu, lam)``.
 
-    Used in the dual Pieri rule; accounts for interactions between component i
-    and the components *before* it.
+    Used in the dual Pieri rule.
 
     Parameters
     ----------
     i : int
-        Component index (0-indexed).
-    nu : tuple of list
+        Component index (0-indexed) at which the transition `nu[i] -> lam`` occurs,
+        with ``|lam|=|nu[i]-1|``.
+    nu : tuple of Partitions
         Full N-tuple of source partitions.
-    lam : list or Partition
+    lam : Partition
         Target partition for component i.
 
     Returns
@@ -873,16 +840,16 @@ def alpha2_N(i,nu,lam):
 def rtildeast(lam,z):
     r"""
     Return ``PE(-q3*x2d(lam)/z - 1)`` if ``z`` is a removable content of ``lam``.
+    This is a normalized dual Pieri coefficient.
 
     Parameters
     ----------
-    lam : list or Partition
+    lam : Partition
     z : ring element
 
     Returns
     -------
-    ring element or int
-        The PE factor if ``z in R(lam)``, else 0.
+    rational function
     """
     if z in R(lam):
         return PE(-q3*x2d(lam)/z-1)
@@ -892,16 +859,16 @@ def rtildeast(lam,z):
 def rtilde(lam,z):
     r"""
     Return ``PE(x2d(lam)/z - 1)`` if ``z`` is an addable content of ``lam``.
+    This is a normalized Pieri coefficient.
 
     Parameters
     ----------
-    lam : list or Partition
+    lam : Partition
     z : ring element
 
     Returns
     -------
-    ring element or int
-        The PE factor if ``z in A(lam)``, else 0.
+    rational function
     """
     if z in A(lam):
         return PE(x2d(lam)/z-1)
@@ -910,14 +877,14 @@ def rtilde(lam,z):
 
 def tP(lam):
     r"""
-    Compute the tilde Macdonald P-function ``tP_lam``.
+    Compute the Macdonald P-function ``\tilde{P}_lam`` in the spherical normalization.
 
     Defined as the Schur expansion of ``McdP(lam)`` divided by its principal
     specialisation ``McdP(lam)(epsilon([]))``.
 
     Parameters
     ----------
-    lam : list or Partition
+    lam : Partition
 
     Returns
     -------
@@ -934,11 +901,11 @@ def b_lambda(lam):
 
     Parameters
     ----------
-    lam : list or Partition
+    lam : Partition
 
     Returns
     -------
-    ring element
+    rational function
     """
     lam = Partition(lam)
     return McdP.c2(lam)/McdP.c1(lam)
@@ -949,12 +916,15 @@ def blam(lam):
 
     Parameters
     ----------
-    lam : list or Partition
+    lam : Partition
 
     Returns
     -------
-    ring element
-        ``1`` if ``lam == []``, otherwise ``1 / <P_lam, P_lam>``.
+    rational function
+
+    See Also
+    --------
+    b_lambda (they should be equal)
     """
     if lam == []:
         return 1
@@ -968,11 +938,11 @@ def b_tilde(lam):
 
     Parameters
     ----------
-    lam : list or Partition
+    lam : Partition
 
     Returns
     -------
-    ring element
+    rational function
     """
     if lam == []:
         return 1
@@ -987,7 +957,7 @@ def A(lam):
 
     Parameters
     ----------
-    lam : list or Partition
+    lam : Partition
 
     Returns
     -------
@@ -1005,7 +975,7 @@ def R(lam):
 
     Parameters
     ----------
-    lam : list or Partition
+    lam : Partition
 
     Returns
     -------
@@ -1073,7 +1043,7 @@ def coercion_safe(x,f):
 
 def skew_on_tensor(x,y):
     r"""
-    Compute the factor-wise skew product of two tensor-product symmetric functions.
+    Compute the factor-wise skewing of ``x`` by ``y``.
 
     For ``x``, ``y`` in ``Sym^{tensor N}``, applies the skew operation
     independently in each tensor factor.
@@ -1094,8 +1064,7 @@ def omega_on_tensor(x):
     r"""
     Apply the omega involution factor-by-factor to a tensor-product element.
 
-    The omega involution maps ``e_k <-> h_k`` (equivalently ``q <-> t``
-    in the Macdonald basis).
+    The omega involution maps ``e_k <-> h_k``.
 
     Parameters
     ----------
@@ -1110,7 +1079,7 @@ def omega_on_tensor(x):
 
 def coercion_on_tensor(x,parent):
     r"""
-    Coerce a tensor-product symmetric function to a new list of bases.
+    Coerce a multi-symmetric function to a new list of bases.
 
     Parameters
     ----------
@@ -1127,7 +1096,7 @@ def coercion_on_tensor(x,parent):
 
 def degree_on_tensor(x):
     r"""
-    Return the maximum total degree of a tensor-product symmetric function.
+    Return the maximum total degree of a multi-symmetric function.
 
     The total degree of a pure tensor ``mu_0 x ... x mu_{N-1}`` is
     ``sum(sum(mu_i))``.
@@ -1144,18 +1113,18 @@ def degree_on_tensor(x):
 
 def scalar_on_tensor_qt(x,y):
     r"""
-    Compute the Macdonald (q,t)-scalar product on a tensor product.
+    Compute the Macdonald (q,t)-scalar product of multi-symmetric functions ``x`` and ``y``.
 
     Uses the pairing ``<P_lam, Q_mu> = delta_{lam,mu}`` factor-by-factor.
 
     Parameters
     ----------
-    x : element of ``Sym^{tensor N}``  (expressed in McdP)
-    y : element of ``Sym^{tensor N}``  (expressed in McdQ)
+    x : element of ``Sym^{tensor N}``
+    y : element of ``Sym^{tensor N}``
 
     Returns
     -------
-    ring element
+    rational function
     """
     l = len(x.parent().tensor_factors())
     x = coercion_on_tensor(x,[McdP]*l)
@@ -1172,7 +1141,7 @@ def counit_on_tensor(x):
 
     Returns
     -------
-    ring element
+    rational function
     """
     parent = x.parent().tensor_factors()
     return sum( coeff * prod(pp(k).counit() for k,pp in zip(mu,parent)) for mu,coeff in x)
@@ -1180,6 +1149,7 @@ def counit_on_tensor(x):
 def counit_on_tensor2(x):
     r"""
     Extract the coefficient of the all-empty multi-partition ``([], ..., [])``.
+    Same output as :func:`counit_on_tensor`
 
     Parameters
     ----------
@@ -1187,13 +1157,13 @@ def counit_on_tensor2(x):
 
     Returns
     -------
-    ring element
+    rational function
     """
     return sum( coeff * prod(Kronecker_delta(k,[]) for k in mu) for mu,coeff in x)
 
 def level(n,x):
     r"""
-    Project a tensor-product symmetric function onto its degree-n component.
+    Project a multi-symmetric function onto its degree-n component.
 
     Parameters
     ----------
@@ -1212,7 +1182,7 @@ def level(n,x):
 
 def e1t(N):
     r"""
-    Compute the first-order truncated elementary symmetric function on N variables.
+    Compute the N-fold coproduct of ``e[1]`` in the spherical normalization.
 
     Returns ``(1/epsilon([]))`` times the sum of the N elementary degree-1 generators,
     one per tensor factor.
@@ -1250,7 +1220,7 @@ def evalArg(x,arg):
 
 def evaluate_on_tensor(x,arg):
     r"""
-    Evaluate a tensor-product symmetric function at a list of arguments.
+    Evaluate a multi-symmetric function at a list of arguments.
 
     Factor i is independently evaluated at ``arg[i]``.
 
@@ -1269,15 +1239,14 @@ def evaluate_on_tensor(x,arg):
 
 def diag_plethysm(x,arg_l):
     r"""
-    Apply a list of plethystic substitutions, one per tensor factor.
-
-    For ``x = sum_mu c_mu * mu_0 x ... x mu_{N-1}``, returns
-    ``sum_mu c_mu * mu_0(arg_l[0]) x ... x mu_{N-1}(arg_l[N-1])``.
+    Apply a list of plethystic substitutions, one per tensor factor. Differs from
+    :func:`evaluate_on_tensor` in that its argument is a list of elements of ``Sym``
+    and it returns another multi-symmetric function.
 
     Parameters
     ----------
     x : element of ``Sym^{tensor N}``
-    arg_l : list of length N
+    arg_l : list of length N elements of Sym
         Plethystic substitution argument for each tensor factor.
 
     Returns
@@ -1292,6 +1261,7 @@ def diag_plethysm(x,arg_l):
 def subsr(x):
     r"""
     Apply the substitution ``r -> -1`` to the coefficients of a tensor product element.
+    (not very elegant workaround to implement the non-plethystic minus sign, usually denoted as `ϵ`)
 
     Parameters
     ----------
@@ -1307,9 +1277,7 @@ def subsr(x):
 
 def rev(x):
     r"""
-    Reverse the order of tensor factors.
-
-    Maps ``mu_0 x ... x mu_{N-1}`` to ``mu_{N-1} x ... x mu_0``.
+    Reverse the order of tensor factors in a multi-symmetric function.
 
     Parameters
     ----------
@@ -1326,6 +1294,7 @@ def rev(x):
 def scalar_N(f,g):
     r"""
     Compute the N-component GMP scalar product ``<f, g>_N``.
+    It implements the inner product defined in Sec.3.2.3 of arxiv:2508.19704.
 
     The scalar product with respect to which the GMPs are orthogonal. It
     differs from the naive tensor product of Macdonald scalar products by a
@@ -1338,7 +1307,7 @@ def scalar_N(f,g):
 
     Returns
     -------
-    ring element
+    rational function
     """
     ev = lambda k,x: p(k)(x) if k!=[] else 1
     N = len(g.parent().tensor_factors())
@@ -1361,7 +1330,7 @@ def scalar_N_prime(f,g):
 
     Returns
     -------
-    ring element
+    rational function
     """
     ev = lambda k,x: p(k)(x) if k!=[] else 1
     N = len(g.parent().tensor_factors())
@@ -1378,10 +1347,11 @@ def scalar_N_prime(f,g):
 
 def xplus_k(k,x):
     r"""
-    Apply the single-factor positive DDF operator ``x^+_k`` to a symmetric function.
+    Apply the operator ``x^{+}_k`` to a symmetric function.
+    {!!! the label `k` might be inverted w.r.t. usual conventions !!!}
 
-    Implements the raising vertex operator mode generating the quantum toroidal
-    algebra action on a single Fock space factor.
+    Implements the vertex operator generating the quantum toroidal
+    algebra action at level one.
 
     Parameters
     ----------
@@ -1404,9 +1374,10 @@ def xplus_k(k,x):
 
 def xminus_k(k,x):
     r"""
-    Apply the single-factor negative DDF operator ``x^-_k`` to a symmetric function.
+    Apply the operator ``x^{-}_k`` to a symmetric function.
+    {!!! the label `k` might be inverted w.r.t. usual conventions !!!}
 
-    The lowering counterpart of :func:`xplus_k`.
+    The `minus` counterpart of :func:`xplus_k`.
 
     Parameters
     ----------
@@ -1449,7 +1420,7 @@ def xminus_k(k,x):
 
 def xplus_on_tensor(i,k,x):
     r"""
-    Apply the positive DDF operator ``x^+_k`` to the i-th factor of a tensor product.
+    Apply the operator ``x^{+}_k`` to the i-th factor of a tensor product.
 
     All other factors are left unchanged.
 
@@ -1473,7 +1444,7 @@ def xplus_on_tensor(i,k,x):
 
 def xminus_on_tensor(i,k,x):
     r"""
-    Apply the negative DDF operator ``x^-_k`` to the i-th factor of a tensor product.
+    Apply the operator ``x^{-}_k`` to the i-th factor of a tensor product.
 
     Parameters
     ----------
@@ -1495,12 +1466,12 @@ def xminus_on_tensor(i,k,x):
 
 def LAM(i,k,x):
     r"""
-    Apply the twisted positive operator ``Lambda_i(k)`` to a tensor product.
+    Apply the twisted operator ``Lambda_{i,k}`` to a tensor product.
 
     This is the i-th component of the full raising generator, with a twist by
     the spectral parameters ``u_j`` for ``j < i``:
 
-        Lambda_i(k) = sum_b  s_{k-b}(twist) * x^+_b(i)
+        Lambda_{i,k} = sum_b  s_{k-b}(twist) * x^{+}_b(i)
 
     where ``twist = (1-q2)(1-q3) * sum_{j<i} X_j``.
 
@@ -1528,7 +1499,7 @@ def LAM(i,k,x):
 
 def LAMast(i,k,x):
     r"""
-    Apply the twisted negative operator ``Lambda^*_i(k)`` to a tensor product.
+    Apply the twisted operator ``Lambda^*_{i,k}`` to a tensor product.
 
     The dual counterpart of :func:`LAM`, with a twist by the spectral parameters
     ``u_j`` for ``j > i``.
@@ -1557,14 +1528,14 @@ def LAMast(i,k,x):
 
 def xplus(k,x):
     r"""
-    Apply the full N-component raising generator ``x^+(k)`` to a tensor product.
+    Apply the full N-component raising generator ``x^{+}_k`` to a tensor product.
 
-    This is the zero-mode (k=0) or higher-mode of the quantum toroidal algebra
+    This is the k-th mode of the quantum toroidal algebra current
     acting diagonally across all N Fock space factors:
 
-        x^+(k) = sum_{i=0}^{N-1}  u_i * Lambda_i(k)
+        x^{+}_k = sum_{i=0}^{N-1}  u_i * Lambda_{i,k}
 
-    The GMP ``G_lam`` is an eigenfunction of ``x^+(0)`` with eigenvalue
+    The GMP ``G_lam`` is an eigenfunction of ``x^{+}_0`` with eigenvalue
     ``eigenvalue(lam)``.
 
     Parameters
@@ -1586,9 +1557,9 @@ def xplus(k,x):
 
 def xminus(k,x):
     r"""
-    Apply the full N-component lowering generator ``x^-(k)`` to a tensor product.
+    Apply the full N-component lowering generator ``x^{-}_k`` to a tensor product.
 
-        x^-(k) = sum_{i=0}^{N-1}  u_i^{-1} * Lambda^*_i(k)
+        x^{-}_k = sum_{i=0}^{N-1}  u_i^{-1} * Lambda^*_{i,k}
 
     Parameters
     ----------
@@ -1607,15 +1578,11 @@ def xminus(k,x):
     N = len(x.parent().tensor_factors())
     return sum(ring(1/u[i])*LAMast(i,k,x) for i in range(N))
 
-# def xminus2(k,x):
-#     N = len(x.parent().tensor_factors())
-#     return sum(ring(1/u[i])*LAMast(i,k,x)*q3**(-i*k) for i in range(N))
-
 def testEigenfunction(mu):
     r"""
-    Verify that ``G_mu`` is an eigenfunction of ``x^+(0)``.
+    Verify that ``G_mu`` is an eigenfunction of ``x^{+}_0``.
 
-    Checks that ``x^+(0) G_mu == eigenvalue(mu) * G_mu``.
+    Checks that ``x^{+}_0 G_mu == eigenvalue(mu) * G_mu``.
 
     Parameters
     ----------
@@ -1646,7 +1613,7 @@ def framing(x,power=1):
     Parameters
     ----------
     x : symmetric function
-    power : int or ring element, optional
+    power : int, optional
         Framing power (default 1).
 
     Returns
@@ -1667,7 +1634,7 @@ def framing_on_tensor(x,power=1):
     Parameters
     ----------
     x : element of ``Sym^{tensor N}``
-    power : int or ring element, optional
+    power : int, optional
         Framing power (default 1).
 
     Returns
@@ -1679,7 +1646,7 @@ def framing_on_tensor(x,power=1):
 
 def Delta(z,x,power=1,dual=1):
     r"""
-    Apply the Delta operator (plethystic multiplication) to a symmetric function.
+    Apply the Delta operator to a symmetric function.
 
     Multiplies the coefficient of each ``P_mu`` by ``PE(-power * z * chi2d(mu, dual))``.
 
@@ -1687,7 +1654,7 @@ def Delta(z,x,power=1,dual=1):
     ----------
     z : ring element
     x : symmetric function
-    power : int or ring element, optional
+    power : int, optional
         (default 1)
     dual : int, optional
         Exponent in ``chi2d(mu, dual)`` (default 1).
@@ -1702,13 +1669,13 @@ def Delta(z,x,power=1,dual=1):
 
 def Delta_on_tensor(z,x,power=1,dual=1):
     r"""
-    Apply the Delta operator to each GMP component of a tensor product element.
+    Apply the Delta operator to a multi-symmetric function by expanding to the GMP basis.
 
     Parameters
     ----------
     z : ring element
     x : element of ``Sym^{tensor N}``
-    power : int or ring element, optional
+    power : int, optional
     dual : int, optional
 
     Returns
@@ -1728,14 +1695,14 @@ def GMMatrixElement(lam,nu):
     Compute one row of the eigenvalue-equation matrix for the GMP ``G_lam``.
 
     The GMP is defined as a null vector of the matrix
-    ``[x^+(0)(P_nu) - eigenvalue(lam) * delta_{mu,nu}]_{mu,nu}``.
+    ``[x^{+}_0(P_nu) - eigenvalue(lam) * delta_{mu,nu}]_{mu,nu}``.
     This function returns the row indexed by ``lam``.
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
         Multi-partition labelling the GMP.
-    nu : tuple of list
+    nu : tuple of Partitions
         Multi-partition labelling the column.
 
     Returns
@@ -1764,9 +1731,9 @@ def GMPC(lam,mu):
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
         Multi-partition labelling the GMP.
-    mu : tuple of list
+    mu : tuple of Partitions
         Multi-partition labelling the P-basis element.
 
     Returns
@@ -1826,7 +1793,7 @@ def GMP(lam):
     Compute the Generalized Macdonald P-function ``G_lam``.
 
     The GMP for an N-tuple of partitions ``lam`` is the unique (up to scalar)
-    simultaneous eigenfunction of the zero-mode ``x^+(0)`` with eigenvalue
+    simultaneous eigenfunction of the zero-mode ``x^{+}_0`` with eigenvalue
     ``eigenvalue(lam)``, expanded in the tensor product of Macdonald P-functions:
 
         G_lam = sum_mu  C(lam, mu) * P_{mu_0} x ... x P_{mu_{N-1}}
@@ -1835,7 +1802,7 @@ def GMP(lam):
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
         N-tuple of partitions, e.g. ``([2,1], [1])`` for N=2.
 
     Returns
@@ -1863,14 +1830,11 @@ def GMQ(lam):
     r"""
     Compute the Generalized Macdonald Q-function ``GMQ_lam``.
 
-    The dual GMP, obtained by reversing the component ordering and multiplying
-    by the b-factors:
-
-        GMQ_lam = b_lam * G_{rev(lam)}
+    The dual of GMP w.r.t. the inner product `scalar_N`
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
 
     Returns
     -------
@@ -1895,7 +1859,7 @@ def tildeGMP(lam):
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
 
     Returns
     -------
@@ -1905,13 +1869,13 @@ def tildeGMP(lam):
 
 def barGMP(lam):
     r"""
-    Compute the bar GMP, normalised by its own principal specialisation.
+    Compute the GMP in a different normalisation {legacy; to be removed}.
 
-    Divides ``G_lam`` by its evaluation at ``(u_k * epsilon([]))_k``.
+    Divides ``G_lam`` by its evaluation at ``(u_k * epsilon([]))``.
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
 
     Returns
     -------
@@ -1923,14 +1887,15 @@ def barGMP(lam):
 
 def GMK(lam):
     r"""
-    Compute the generalised Macdonald K-function.
+    Compute the generalised (inhomogeneous) Macdonald K-function. Useful to check
+    the generalised GHT.
 
     Applies framing and a diagonal plethysm with a shifted epsilon argument to
     the normalised GMP, then sets ``r -> -1``.
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
 
     Returns
     -------
@@ -1945,7 +1910,7 @@ def iGMP(lam):
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
 
     Returns
     -------
@@ -1957,14 +1922,14 @@ def iGMP(lam):
 
 def GMPast(lam):
     r"""
-    Compute the dual (starred) GMP ``G^*_lam``.
+    Compute the starred (inhomogeneous) GMP ``G^*_lam``.
 
     Applies framing, a diagonal plethysm with a framed epsilon argument, and
     then inverts the framing, with the substitution ``r -> -1``.
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
 
     Returns
     -------
@@ -1974,7 +1939,7 @@ def GMPast(lam):
 
 def to_gmp(x):
     r"""
-    Decompose a tensor-product symmetric function in the GMP basis.
+    Decompose a multi-symmetric function in the GMP basis.
 
     Returns the dictionary ``{lam: c_lam}`` such that
     ``x = sum_lam c_lam * G_lam``, computed via the scalar product
@@ -2006,7 +1971,7 @@ def to_gmp(x):
 
 def to_gmp2(x):
     r"""
-    Decompose a tensor-product symmetric function in the GMP basis (matrix method).
+    Decompose a multi-symmetric function in the GMP basis (matrix method).
 
     Alternative to :func:`to_gmp` that solves a linear system rather than
     using the scalar product. May be faster when many coefficients are needed.
@@ -2051,7 +2016,7 @@ def pieri(lam):
 
     Parameters
     ----------
-    lam : tuple of list
+    lam : tuple of Partitions
 
     Returns
     -------
@@ -2071,11 +2036,11 @@ def part_plus(m,mu):
     ----------
     m : int
         Number of boxes to add. Returns ``[]`` if ``m < 0``.
-    mu : list or Partition
+    mu : Partition
 
     Returns
     -------
-    list of Partition
+    list of Partitions
     """
     if m<0:
         return list()
@@ -2089,11 +2054,11 @@ def part_minus(m,mu):
     ----------
     m : int
         Number of boxes to remove. Returns ``[]`` if ``m < 0``.
-    mu : list or Partition
+    mu : Partition
 
     Returns
     -------
-    list of Partition
+    list of Partitions
     """
     if m<0:
         return list()
@@ -2110,7 +2075,7 @@ def pieri_set(m,lam):
     ----------
     m : int
         Degree of the elementary symmetric function.
-    lam : tuple of list
+    lam : tuple of Partitions
 
     Returns
     -------
@@ -2129,7 +2094,7 @@ def pieri_set_minus(m,nu):
     Parameters
     ----------
     m : int
-    nu : tuple of list
+    nu : tuple of Partitions
 
     Returns
     -------
@@ -2169,7 +2134,7 @@ def pieriTestDual(m,nu):
     Parameters
     ----------
     m : int
-    nu : tuple of list
+    nu : tuple of Partitions
 
     Returns
     -------
@@ -2192,7 +2157,7 @@ def part_to_str(mu):
 
     Parameters
     ----------
-    mu : list or Partition
+    mu : Partition
 
     Returns
     -------
@@ -2256,7 +2221,7 @@ def mpart_to_str(mu):
 
 def to_math(x):
     r"""
-    Format a tensor-product symmetric function as a Mathematica-style sum string.
+    Format a multi-symmetric function as a Mathematica-style sum string.
 
     Parameters
     ----------
@@ -2274,7 +2239,7 @@ def to_math(x):
 
 def to_math_l(x):
     r"""
-    Format the coefficients of a tensor-product symmetric function as a Mathematica list.
+    Format the coefficients of a multi-symmetric function as a Mathematica list.
 
     Parameters
     ----------
