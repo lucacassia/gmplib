@@ -17,9 +17,9 @@ The construction follows:
 
 ## Mathematical background
 
-The library works with **multi-partitions** $\boldsymbol{\lambda} = (\lambda^{(0)}, \ldots, \lambda^{(N-1)})$ — N-tuples of integer partitions. The Generalized Macdonald function $G_{\boldsymbol{\lambda}}$ is defined as the unique eigenfunction of the zero-mode operator $x^{+}_0$:
+The library works with **multi-partitions** $\boldsymbol{\lambda} = (\lambda^{(0)}, \ldots, \lambda^{(N-1)})$ — N-tuples of integer partitions. The Generalized Macdonald function $P_{\boldsymbol{\lambda}}$ is defined as the unique eigenfunction of the zero-mode operator $x^{+}_0$:
 
-$$\rho^{(N,0)}_{u_0,\dots,u_{N-1}}(x^{+}_0) \cdot G_{\boldsymbol{\lambda}} = \mathrm{eigenvalue}(\boldsymbol{\lambda})\cdot G_{\boldsymbol{\lambda}}, \qquad \mathrm{eigenvalue}(\boldsymbol{\lambda}) = \sum_{i=0}^{N-1} u_i x_{\lambda^{(i)}}$$
+$$\rho^{(N,0)}_{u_0,\dots,u_{N-1}}(x^{+}_0) \cdot P_{\boldsymbol{\lambda}} = \mathrm{eigenvalue}(\boldsymbol{\lambda})\cdot P_{\boldsymbol{\lambda}}, \qquad \mathrm{eigenvalue}(\boldsymbol{\lambda}) = \sum_{i=0}^{N-1} u_i x_{\lambda^{(i)}}$$
 
 expanded in the tensor product of ordinary Macdonald P-functions. The deformation parameters satisfy $q_1 q_2 q_3 = 1$ with $q_1 = q$, $q_2 = 1/t$, $q_3 = t/q$.
 
@@ -68,12 +68,12 @@ sage: to_gmp(G)
 
 | Function | Description |
 |----------|-------------|
-| `GMP(lam)` | Compute $G_{\boldsymbol{\lambda}}$ in the tensor product of Macdonald P-bases |
+| `GMP(lam)` | Compute $P_{\boldsymbol{\lambda}}$ in the tensor product of Macdonald P-bases |
 | `GMQ(lam)` | Compute the dual GMP w.r.t. the appropriate scalar product |
-| `tildeGMP(lam)` | Spherically normalised GMP: $G_{\boldsymbol{\lambda}}$ divided by the product of principal specialisations |
+| `tildeGMP(lam)` | Spherically normalised GMP: $P_{\boldsymbol{\lambda}}$ divided by the product of principal specialisations |
 | `barGMP(lam)` | GMP normalised by its own evaluation at the epsilon arguments |
 | `GMK(lam)` | Auxiliary inhomogeneous Generalised Macdonald K-function |
-| `GMPast(lam)` | Starred (inhomogenous) GMP $G^*_{\boldsymbol{\lambda}}$ |
+| `GMPast(lam)` | Starred (inhomogenous) GMP $P^*_{\boldsymbol{\lambda}}$ |
 | `iGMP(lam)` | Inverted GMP with reversed spectral parameters |
 
 ### GMP coefficients
@@ -91,7 +91,7 @@ sage: to_gmp(G)
 |----------|-------------|
 | `pieriTest(lam)` | Verify the $e_1$-Pieri rule |
 | `pieriTestDual(nu)` | Verify the dual (skew) Pieri rule |
-| `psi_prime_PE(nu, lam)` | Elementary Pieri vertex coefficient $\psi'(\nu, \lambda)$ |
+| `psi_prime_PE(nu, lam)` | Elementary Pieri vertex coefficient $\psi'_{\nu/\lambda}$ |
 
 ### Vertex operators and algebra action
 
@@ -99,10 +99,6 @@ sage: to_gmp(G)
 |----------|-------------|
 | `xplus(k, x)` | Full N-component raising generator $x^{+}_k$ |
 | `xminus(k, x)` | Full N-component lowering generator $x^{-}_k$ |
-| `LAM(i, k, x)` | Twisted positive operator $\Lambda_{i,k}$ (i-th component) |
-| `LAMast(i, k, x)` | Twisted negative operator $\Lambda^*_{i,k}$ |
-| `xplus_k(k, x)` | Single-factor raising mode |
-| `xminus_k(k, x)` | Single-factor lowering mode |
 | `a_k(k, x)` | Creation/annihilation operator $a_k$ |
 
 ### Scalar products
@@ -120,7 +116,7 @@ sage: to_gmp(G)
 | `PE(x)` | Plethystic exponential |
 | `DET(x)` | Determinant factor of a Laurent polynomial |
 | `epsilon(part)` | Epsilon specialisation argument for a partition, $\epsilon_\lambda$ |
-| `eigenvalue(lam)` | Eigenvalue of $G_{\boldsymbol{\lambda}}$ under $x^{+}_0$ |
+| `eigenvalue(lam)` | Eigenvalue of $x^{+}_0$ acting on $P_{\boldsymbol{\lambda}}$ |
 | `chi2d(lam)` | Content sum of a 2d partition, $\chi_\lambda = \sum_{(i,j)\in\lambda}q_1^{j-1}q_2^{i-1}$ |
 | `x2d(lam)` | Defined as $x_\lambda=1-(1-q_1)(1-q_2)\chi_\lambda=\frac{\epsilon_\lambda}{\epsilon_\emptyset}$ |
 | `mPartitions(N, k)` | All N-tuples of partitions of total weight $k$ |
