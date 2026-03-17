@@ -87,8 +87,8 @@ sage: to_gmp(G)
 
 | Function | Description |
 |----------|-------------|
-| `pieriTest(m, lam)` | Verify the degree-m Pieri rule |
-| `pieriTestDual(m, nu)` | Verify the dual (skew) Pieri rule |
+| `pieriTest(lam)` | Verify the $e_1$-Pieri rule |
+| `pieriTestDual(nu)` | Verify the dual (skew) Pieri rule |
 | `psi_prime_PE(nu, lam)` | Elementary Pieri vertex coefficient $\psi'(\nu, \lambda)$ |
 
 ### Vertex operators and algebra action
