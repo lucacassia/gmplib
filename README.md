@@ -9,7 +9,9 @@ These functions generalize the classical Macdonald P/Q-functions (recovered at N
 - Representation theory of the quantum toroidal algebra $U_{q,t}(\widehat{\widehat{\mathfrak{gl}}}_1)$
 
 The construction follows:
-> Bourgine J.-E., Cassia L., Stoyan A. *Generalized Macdonald functions and quantum toroidal gl(1) algebra* (2025). [arXiv:2508.19704](https://arxiv.org/abs/2508.19704)
+> J.-E. Bourgine, L. Cassia, A. Stoyan,
+> *Generalized Macdonald functions and quantum toroidal gl(1) algebra* (2025),
+> [arXiv:2508.19704](https://arxiv.org/abs/2508.19704).
 
 ---
 
