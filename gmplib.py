@@ -319,10 +319,9 @@ def mPartitions(N,k):
 
     Returns
     -------
-    filter
-        Iterator over N-tuples of Sage ``Partition`` objects.
+    list
     """
-    return vectors_with_partitions(N,k)
+    return list(vectors_with_partitions(N,k))
 
 def mPoly(mpart,parent):
     """
