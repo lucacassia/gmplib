@@ -2004,29 +2004,6 @@ def to_gmp2(x):
 # Pieri rules
 # ---------------------------------------------------------------------------
 
-def pieri(lam):
-    r"""
-    Verify the elementary Pieri rule for the GMP ``G_lam``.
-
-    Checks that:
-
-        e_1(X_0 + ... + X_{N-1}) * G_lam
-        = sum_{i, nu: lam_i -> nu}  alpha_N(i, nu, lam) * psi'(nu, lam_i) * G_{lam with lam_i -> nu}
-
-    Parameters
-    ----------
-    lam : tuple of Partitions
-
-    Returns
-    -------
-    bool
-    """
-    N = len(lam)
-    X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
-    lhs = e[1](sum(X))*GMP(lam)
-    rhs = sum( sum(alpha_N(i,nu,lam)*psi_prime_PE(nu,lam[i])*GMP([lam[j] for j in range(i)]+[nu]+[lam[j] for j in range(i+1,N)]) for nu in Partition(lam[i]).up() ) for i in range(N))
-    return rhs==lhs
-
 def part_plus(m,mu):
     r"""
     Return all partitions obtainable from ``mu`` by adding ``m`` boxes.
@@ -2063,9 +2040,9 @@ def part_minus(m,mu):
         return list()
     return list(s(s(mu).skew_by(e[m])).support())
 
-def pieri_set(m,lam):
+def pieri_set_plus(m,lam):
     r"""
-    Compute the Pieri set for the elementary operator ``e_m`` acting on ``G_lam``.
+    Compute the Pieri set for adding ``m`` boxes to ``lam``.
 
     Returns all multi-partitions ``nu`` of total weight ``|lam| + m`` such that
     each component ``nu_i`` is obtainable from ``lam_i`` by adding boxes.
@@ -2073,7 +2050,7 @@ def pieri_set(m,lam):
     Parameters
     ----------
     m : int
-        Degree of the elementary symmetric function.
+        Number of boxes to add.
     lam : tuple of Partitions
 
     Returns
@@ -2085,7 +2062,7 @@ def pieri_set(m,lam):
 
 def pieri_set_minus(m,nu):
     r"""
-    Compute the dual Pieri set for removing ``m`` boxes from ``G_nu``.
+    Compute the dual Pieri set for removing ``m`` boxes from ``nu``.
 
     Returns all multi-partitions ``lam`` of total weight ``|nu| - m`` such that
     each component ``lam_i`` is obtainable from ``nu_i`` by removing boxes.
@@ -2093,6 +2070,7 @@ def pieri_set_minus(m,nu):
     Parameters
     ----------
     m : int
+        Number of boxes to remove.
     nu : tuple of Partitions
 
     Returns
@@ -2102,19 +2080,18 @@ def pieri_set_minus(m,nu):
     N = len(nu)
     return filter(lambda lam: all(lam[i] in part_minus(sum(nu[i])-sum(lam[i]),nu[i]) for i in range(N)), mPartitions(N,sum(map(sum,nu))-m))
 
-def pieriTest(m,lam):
+def pieriTest(lam):
     r"""
-    Verify the degree-m Pieri rule for the GMP ``G_lam``.
+    Verify the elementary Pieri rule for the GMP ``G_lam``.
 
     Checks that:
 
-        e_m(X_0 + ... + X_{N-1}) * G_lam
-        = sum_{nu in PieriSet(m,lam)}  prod_i alpha_N(i,nu_i,lam) * psi'(nu_i,lam_i) * G_nu
+        e_1(X_0 + ... + X_{N-1}) * G_lam
+        = sum_{i, nu: lam_i -> nu}  alpha_N(i, nu, lam) * psi'(nu, lam_i) * G_{lam with lam_i -> nu}
 
     Parameters
     ----------
-    m : int
-    lam : tuple of list
+    lam : tuple of Partitions
 
     Returns
     -------
@@ -2122,17 +2099,16 @@ def pieriTest(m,lam):
     """
     N = len(lam)
     X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
-    lhs = e[m](sum(X))*GMP(lam)
-    rhs = sum( prod(alpha_N(i,nu[i],lam)*psi_prime_PE(nu[i],lam[i]) for i in range(N)) * GMP(nu) for nu in pieri_set(m,lam))
-    return lhs==rhs
+    lhs = e[1](sum(X))*GMP(lam)
+    rhs = sum( sum(alpha_N(i,nu,lam)*psi_prime_PE(nu,lam[i])*GMP([lam[j] for j in range(i)]+[nu]+[lam[j] for j in range(i+1,N)]) for nu in Partition(lam[i]).up() ) for i in range(N))
+    return rhs==lhs
 
-def pieriTestDual(m,nu):
+def pieriTestDual(nu):
     r"""
     Verify the dual (skew) Pieri rule for the GMP ``G_nu``.
 
     Parameters
     ----------
-    m : int
     nu : tuple of Partitions
 
     Returns
@@ -2141,8 +2117,8 @@ def pieriTestDual(m,nu):
     """
     N = len(nu)
     X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
-    lhs = skew_on_tensor(GMP(nu),e[m]((1-q)/(1-t)*sum(q3**(i)*X[i] for i in range(N))))
-    rhs = sum( prod( alpha2_N(i,nu,lam[i])*psi2_prime_PE(nu[i],lam[i]) for i in range(N)) * GMP(lam) for lam in pieri_set_minus(m,nu))
+    lhs = skew_on_tensor(GMP(nu),e[1]((1-q)/(1-t)*sum(q3**(i)*X[i] for i in range(N))))
+    rhs = sum( prod( alpha2_N(i,nu,lam[i])*psi2_prime_PE(nu[i],lam[i]) for i in range(N)) * GMP(lam) for lam in pieri_set_minus(1,nu))
     return lhs==rhs
 
 
