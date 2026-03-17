@@ -68,9 +68,9 @@ sage: to_gmp(G)
 |----------|-------------|
 | `GMP(lam)` | Compute $G_{\boldsymbol{\lambda}}$ in the tensor product of Macdonald P-bases |
 | `GMQ(lam)` | Compute the dual GMP w.r.t. the appropriate scalar product |
-| `tildeGMP(lam)` | Normalised GMP: $G_{\boldsymbol{\lambda}}$ divided by the product of principal specialisations |
+| `tildeGMP(lam)` | Spherically normalised GMP: $G_{\boldsymbol{\lambda}}$ divided by the product of principal specialisations |
 | `barGMP(lam)` | GMP normalised by its own evaluation at the epsilon arguments |
-| `GMK(lam)` | Generalised Macdonald K-function |
+| `GMK(lam)` | Auxiliary inhomogeneous Generalised Macdonald K-function |
 | `GMPast(lam)` | Starred (inhomogenous) GMP $G^*_{\boldsymbol{\lambda}}$ |
 | `iGMP(lam)` | Inverted GMP with reversed spectral parameters |
 
@@ -87,11 +87,8 @@ sage: to_gmp(G)
 
 | Function | Description |
 |----------|-------------|
-| `pieri(lam)` | Verify the $e_1$ Pieri rule for $G_{\boldsymbol{\lambda}}$ |
 | `pieriTest(m, lam)` | Verify the degree-m Pieri rule |
 | `pieriTestDual(m, nu)` | Verify the dual (skew) Pieri rule |
-| `pieri_set(m, lam)` | Multi-partitions reachable from $\boldsymbol{\lambda}$ by adding $m$ boxes |
-| `pieri_set_minus(m, nu)` | Multi-partitions reachable by removing $m$ boxes |
 | `psi_prime_PE(nu, lam)` | Elementary Pieri vertex coefficient $\psi'(\nu, \lambda)$ |
 
 ### Vertex operators and algebra action
@@ -144,10 +141,10 @@ The repository includes several notebooks demonstrating the library:
 
 | Notebook | Content |
 |----------|---------|
-| `GHT.ipynb` | Intertwiners and the GHT identity for N = 1, 2, 3 |
+| `GHT.ipynb` | Explicit checks of the GHT identity |
 | `cauchy.ipynb` | Cauchy identity for GMPs |
-| `conjecture3.1.ipynb` | Checks of the conjectured identity 3.1 |
-| `level-2.ipynb` | Level-2 representations |
+| `conjecture3_1.ipynb` | Checks of the conjectured identity 3.1 |
+| `level-2.ipynb` | Example computations of GMPs at level two |
 | `pieri.ipynb` | Pieri rules and dual Pieri rules |
 
 ---
