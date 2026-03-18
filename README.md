@@ -106,7 +106,6 @@ sage: to_gmp(G)
 | Function | Description |
 |----------|-------------|
 | `scalar_Z(f, g)` | N-component GMP scalar product $\langle f, g \rangle_Z$ |
-| `scalar_Z_prime(f, g)` | Primed variant $\langle f, g \rangle'_Z$ |
 | `scalar_on_tensor_qt(x, y)` | Factor-wise Macdonald $(q,t)$-scalar product |
 
 ### Utilities

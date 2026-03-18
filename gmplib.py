@@ -172,8 +172,8 @@ def save_cache(file_name):
     try:
         save(GMPC_cache, filename=file_name)
         print("Saved cache to file:", file_name+".sobj")
-    except:
-        print("Saving failed!")
+    except Exception as exc:
+        print(f"Saving failed: {exc}")
 
 def cache_to_dict():
     """
@@ -214,8 +214,8 @@ def load_cache(file_name):
         obj = load(file_name)
         print("Loaded cache from file:", file_name)
         return obj
-    except:
-        print("Cache file not found. Starting from scratch.")
+    except Exception as exc:
+        print(f"Loading failed: {exc}. Starting from scratch.")
         return dict({})
 
 
@@ -1315,30 +1315,6 @@ def scalar_Z(f,g):
     g = sum(coeff * prod(ev(mu[k],X[N-k-1]-(1-q3)*sum(q3**(j-N+k)*X[j] for j in range(N-k,N))) for k in range(N)) for mu,coeff in g)
     return scalar_on_tensor_qt(f,g)
 
-def scalar_Z_prime(f,g):
-    r"""
-    Compute the primed N-component GMP scalar product ``<f, g>_Z'``.
-
-    Same as :func:`scalar_Z` but with the tensor factors of ``g`` reversed
-    before taking the scalar product.
-
-    Parameters
-    ----------
-    f : element of ``Sym^{tensor N}``
-    g : element of ``Sym^{tensor N}``
-
-    Returns
-    -------
-    rational function
-    """
-    ev = lambda k,x: p(k)(x) if k!=[] else 1
-    N = len(g.parent().tensor_factors())
-    X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
-    g = coercion_on_tensor(g,[p]*N)
-    g = sum(coeff * prod(ev(mu[k],X[N-k-1]-(1-q3)*sum(q3**(j-N+k)*X[j] for j in range(N-k,N))) for k in range(N)) for mu,coeff in g)
-    g = rev(g)
-    return scalar_on_tensor_qt(f,g)
-
 
 # ---------------------------------------------------------------------------
 # Vertex operators and the generalised Macdonald operator
@@ -1916,7 +1892,6 @@ def iGMP(lam):
     element of ``Sym^{tensor N}``
     """
     N = len(lam)
-    ev = lambda part,x: p(part)(x) if part!=[] else 1
     return sum(coeff.subs({u[i]:u[N-i-1] for i in range(N)}) * mPoly(mu,p) for mu,coeff in GMP(tuple(reversed(lam))))
 
 def GMPast(lam):
@@ -2118,7 +2093,7 @@ def pieriTestDual(nu):
     N = len(nu)
     X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
     lhs = skew_on_tensor(GMP(nu),e[1]((1-q)/(1-t)*sum(q3**(i)*X[i] for i in range(N))))
-    rhs = sum( prod( alpha2_Z(i,nu,lam[i])*psi2_prime_PE(nu[i],lam[i]) for i in range(N)) * GMP(lam) for lam in pieri_set_minus(1,nu))
+    rhs = sum( prod( alpha2_N(i,nu,lam[i])*psi2_prime_PE(nu[i],lam[i]) for i in range(N)) * GMP(lam) for lam in pieri_set_minus(1,nu))
     return lhs==rhs
 
 
