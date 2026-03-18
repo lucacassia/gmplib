@@ -244,25 +244,6 @@ def partitions_up_to_k(k):
         for partition in Partitions(n):
             yield partition
 
-def vectors_with_partitions(N,k):
-    """
-    Generate all N-tuples of partitions whose total weight equals k.
-
-    Parameters
-    ----------
-    N : int
-        Number of components (length of each tuple).
-    k : int
-        Required total weight, i.e. ``sum(sum(mu) for mu in result) == k``.
-
-    Returns
-    -------
-    filter
-        An iterator over N-tuples of Sage ``Partition`` objects satisfying
-        the weight constraint.
-    """
-    return filter(lambda vpart: sum(map(sum, vpart)) == k, product(partitions_up_to_k(k),repeat=N))
-
 def vectors_with_int(N,k):
     """
     Generate all N-tuples of non-negative integers summing to k.
@@ -304,24 +285,36 @@ def generate_combinations(N, d, min_val=0):
     valid_combinations = filter(lambda comb: sum(comb) == d, all_combinations)    
     return valid_combinations
 
-def mPartitions(N,k):
+def mPartitions(N, k):
     """
-    Return all N-tuples of partitions (multi-partitions) of total weight k.
-
-    Alias for :func:`vectors_with_partitions`.
+    Generate all N-tuples of partitions whose total weight equals k.
 
     Parameters
     ----------
     N : int
-        Number of components.
+        Number of components (length of each tuple).
     k : int
-        Total weight.
+        Required total weight, i.e. ``sum(sum(mu) for mu in result) == k``.
 
     Returns
     -------
     list
     """
-    return list(vectors_with_partitions(N,k))
+    if N == 0:
+        return [()] if k == 0 else []
+    result = []
+    def _recurse(remaining_k, remaining_N, current):
+        if remaining_N == 0:
+            if remaining_k == 0:
+                result.append(tuple(current))
+            return
+        for n in range(remaining_k + 1):
+            for part in Partitions(n):
+                current.append(part)
+                _recurse(remaining_k - n, remaining_N - 1, current)
+                current.pop()
+    _recurse(k, N, [])
+    return result
 
 def mPoly(mpart,parent):
     """
