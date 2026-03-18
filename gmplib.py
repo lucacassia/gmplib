@@ -141,7 +141,7 @@ def mcdp_at_eps(lam):
 
 from sage.misc.persist import load, save
 
-def gmp_init(dd=dict({})):
+def gmp_init(dd=None):
     """
     Initialise (or reset) the global GMP coefficient cache.
 
@@ -160,7 +160,7 @@ def gmp_init(dd=dict({})):
         sage: gmp_init(d)          # restore saved cache
     """
     global GMPC_cache
-    GMPC_cache = dd
+    GMPC_cache = dd if dd is not None else {}
 
 def save_cache(file_name):
     """
@@ -1758,7 +1758,7 @@ def GMPC(lam,mu):
         return GMPC_cache[(mp1,mp2)]
 
     except KeyError:
-        mparts = list(mPartitions(N,degree2))
+        mparts = mPartitions(N,degree2)
         M = matrix([GMMatrixElement(mp1,b) for b in mparts])
         null_vec = M.kernel().basis()[0]
         for i in range(len(mparts)):
@@ -1967,7 +1967,7 @@ def to_gmp2(x):
     N = len(x.parent().tensor_factors())
     x = coercion_on_tensor(x,[McdP]*N)
     dd = dict({})
-    ll = flatten(list(list(mPartitions(N,n)) for n in range(deg+1)),max_level=1)
+    ll = flatten(list(mPartitions(N,n) for n in range(deg+1)),max_level=1)
     A = Matrix([[GMPC(mu,lam) for mu in ll] for lam in ll])
     b = vector([x[mu] for mu in ll])
     sol = flatten(A.solve_right(b))
