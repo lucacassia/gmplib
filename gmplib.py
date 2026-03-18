@@ -121,6 +121,19 @@ s = Sym.Schur()
 # Global cache for GMP change-of-basis coefficients
 GMPC_cache = dict({})
 
+# Session-only cache for McdP(lam)(epsilon([])) evaluations.
+# Keyed on Partition objects. Since e[m] = McdP([1]*m) and McdP[m] = McdP([m]),
+# all three are handled by this single cache.
+_mcdp_eps_cache = {}
+
+def mcdp_at_eps(lam):
+    """Return McdP(lam)(epsilon([])), cached for the duration of the session.
+    The empty partition is hardcoded to ring(1) to avoid evaluation errors."""
+    lam = Partition(lam)
+    if lam not in _mcdp_eps_cache:
+        _mcdp_eps_cache[lam] = ring(1) if lam == Partition([]) else McdP(lam)(epsilon([]))
+    return _mcdp_eps_cache[lam]
+
 
 # ---------------------------------------------------------------------------
 # Cache persistence
@@ -739,10 +752,8 @@ def psi_prime_PE(nu,lam):
     if m == 0:
         rhs = 1 if nu == lam else 0
     else:
-        if lam == []:
-            rhs = PE(-chi2d([1]*m)/t - (1-1/t)*(chi2d(nu,-1)-chi2d(lam,-1))*(chi2d(nu)-chi2d(lam)) + (chi2d(nu,-1)-chi2d(lam,-1)) * x2d(lam) ) * (e[m](epsilon([]))) / McdP(nu)(epsilon([]))
-        else:
-            rhs = PE(-chi2d([1]*m)/t - (1-1/t)*(chi2d(nu,-1)-chi2d(lam,-1))*(chi2d(nu)-chi2d(lam)) + (chi2d(nu,-1)-chi2d(lam,-1)) * x2d(lam) ) * (e[m](epsilon([]))) * McdP(lam)(epsilon([])) / McdP(nu)(epsilon([]))
+        PE_factor = PE(-chi2d([1]*m)/t - (1-1/t)*(chi2d(nu,-1)-chi2d(lam,-1))*(chi2d(nu)-chi2d(lam)) + (chi2d(nu,-1)-chi2d(lam,-1)) * x2d(lam))
+        rhs = PE_factor * mcdp_at_eps([1]*m) * mcdp_at_eps(lam) / mcdp_at_eps(nu)
     return rhs
 
 def psi2_prime_PE(nu,lam):
@@ -771,10 +782,8 @@ def psi2_prime_PE(nu,lam):
     if m == 0:
         rhs = 1 if nu == lam else 0
     else:
-        if lam == []:
-            rhs = (-q) * PE(-1 - q3*(chi2d(nu,-1)-chi2d(lam,-1)) * x2d(nu) ) * (McdP[m](epsilon([]))) * McdP(nu)(epsilon([]))
-        else:
-            rhs = (-q) * PE(-1 - q3*(chi2d(nu,-1)-chi2d(lam,-1)) * x2d(nu) ) * (McdP[m](epsilon([]))) * McdP(nu)(epsilon([])) / McdP(lam)(epsilon([]))
+        PE_factor = (-q) * PE(-1 - q3*(chi2d(nu,-1)-chi2d(lam,-1)) * x2d(nu))
+        rhs = PE_factor * mcdp_at_eps([m]) * mcdp_at_eps(nu) / mcdp_at_eps(lam)
     return rhs
 
 def alpha_N(i,nu,lam):
@@ -885,7 +894,7 @@ def tP(lam):
     if lam == []:
         return s.one()
     else:
-        return s(McdP(lam))/McdP(lam)(epsilon([]))
+        return s(McdP(lam))/mcdp_at_eps(lam)
 
 def b_lambda(lam):
     r"""
@@ -1833,7 +1842,7 @@ def tildeGMP(lam):
     -------
     element of ``Sym^{tensor N}``
     """
-    return GMP(lam)/prod(evalArg(McdP(lam[k]),epsilon([])) for k in range(len(lam)))
+    return GMP(lam)/prod(mcdp_at_eps(lam[k]) for k in range(len(lam)))
 
 def barGMP(lam):
     r"""
