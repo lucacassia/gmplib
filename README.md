@@ -115,10 +115,10 @@ sage: to_gmp(G)
 |----------|-------------|
 | `PE(x)` | Plethystic exponential |
 | `DET(x)` | Determinant factor of a Laurent polynomial |
-| `epsilon(part)` | Epsilon specialisation argument for a partition, $\epsilon_\lambda$ |
+| `epsilon(part)` | Epsilon specialisation argument for a partition, $\varepsilon_\lambda$ |
 | `eigenvalue(lam)` | Eigenvalue of the generalized Macdonald operator acting on the GMP |
 | `chi2d(lam)` | Content sum of a 2d partition, $\chi_\lambda = \sum_{(i,j)\in\lambda}q_1^{j-1}q_2^{i-1}$ |
-| `x2d(lam)` | Defined as $x_\lambda=1-(1-q_1)(1-q_2)\chi_\lambda=\frac{\epsilon_\lambda}{\epsilon_\emptyset}$ |
+| `x2d(lam)` | Defined as $x_\lambda=1-(1-q_1)(1-q_2)\chi_\lambda=\frac{\varepsilon_\lambda}{\varepsilon_\emptyset}$ |
 | `mPartitions(N, k)` | All N-tuples of partitions of total weight $k$ |
 
 ### Cache management
