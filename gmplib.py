@@ -1290,9 +1290,9 @@ def rev(x):
     x = coercion_on_tensor(x,[p]*N)
     return sum(coeff*mPoly(reversed(mu),p) for mu,coeff in x)
 
-def scalar_N(f,g):
+def scalar_Z(f,g):
     r"""
-    Compute the N-component GMP scalar product ``<f, g>_N``.
+    Compute the N-component GMP scalar product ``<f, g>_Z``.
     It implements the inner product defined in Sec.3.2.3 of arxiv:2508.19704.
 
     The scalar product with respect to which the GMPs are orthogonal. It
@@ -1315,11 +1315,11 @@ def scalar_N(f,g):
     g = sum(coeff * prod(ev(mu[k],X[N-k-1]-(1-q3)*sum(q3**(j-N+k)*X[j] for j in range(N-k,N))) for k in range(N)) for mu,coeff in g)
     return scalar_on_tensor_qt(f,g)
 
-def scalar_N_prime(f,g):
+def scalar_Z_prime(f,g):
     r"""
-    Compute the primed N-component GMP scalar product ``<f, g>_N'``.
+    Compute the primed N-component GMP scalar product ``<f, g>_Z'``.
 
-    Same as :func:`scalar_N` but with the tensor factors of ``g`` reversed
+    Same as :func:`scalar_Z` but with the tensor factors of ``g`` reversed
     before taking the scalar product.
 
     Parameters
@@ -1829,7 +1829,7 @@ def GMQ(lam):
     r"""
     Compute the Generalized Macdonald Q-function ``GMQ_lam``.
 
-    The dual of GMP w.r.t. the inner product `scalar_N`
+    The dual of GMP w.r.t. the inner product `scalar_Z`
 
     Parameters
     ----------
@@ -1942,7 +1942,7 @@ def to_gmp(x):
 
     Returns the dictionary ``{lam: c_lam}`` such that
     ``x = sum_lam c_lam * G_lam``, computed via the scalar product
-    ``<x, GMQ_mu>_N``.
+    ``<x, GMQ_mu>_Z``.
 
     Parameters
     ----------
@@ -1963,7 +1963,7 @@ def to_gmp(x):
             if n == 0:
                 coeff = counit_on_tensor2(x)
             else:
-                coeff = scalar_N(x,GMQ(mu))
+                coeff = scalar_Z(x,GMQ(mu))
             if coeff != 0:
                 dd[tuple(mu)] = coeff
     return dd
@@ -2118,7 +2118,7 @@ def pieriTestDual(nu):
     N = len(nu)
     X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
     lhs = skew_on_tensor(GMP(nu),e[1]((1-q)/(1-t)*sum(q3**(i)*X[i] for i in range(N))))
-    rhs = sum( prod( alpha2_N(i,nu,lam[i])*psi2_prime_PE(nu[i],lam[i]) for i in range(N)) * GMP(lam) for lam in pieri_set_minus(1,nu))
+    rhs = sum( prod( alpha2_Z(i,nu,lam[i])*psi2_prime_PE(nu[i],lam[i]) for i in range(N)) * GMP(lam) for lam in pieri_set_minus(1,nu))
     return lhs==rhs
 
 
