@@ -469,7 +469,7 @@ def epsilon(part,power=1):
 
 def eigenvalue(lam):
     r"""
-    Compute the eigenvalue of the GMP ``G_lam`` under the zero-mode ``x^{+}_0``.
+    Compute the eigenvalue of the GMP ``P_lam`` under the zero-mode ``x^{+}_0``.
 
     For an N-tuple of partitions ``lam = (lam_0,...,lam_{N-1})``:
 
@@ -1534,7 +1534,7 @@ def xplus(k,x):
 
         x^{+}_k = sum_{i=0}^{N-1}  u_i * Lambda_{i,k}
 
-    The GMP ``G_lam`` is an eigenfunction of ``x^{+}_0`` with eigenvalue
+    The GMP ``P_lam`` is an eigenfunction of ``x^{+}_0`` with eigenvalue
     ``eigenvalue(lam)``.
 
     Parameters
@@ -1579,9 +1579,9 @@ def xminus(k,x):
 
 def testEigenfunction(mu):
     r"""
-    Verify that ``G_mu`` is an eigenfunction of ``x^{+}_0``.
+    Verify that ``P_mu`` is an eigenfunction of ``x^{+}_0``.
 
-    Checks that ``x^{+}_0 G_mu == eigenvalue(mu) * G_mu``.
+    Checks that ``x^{+}_0 P_mu == eigenvalue(mu) * P_mu``.
 
     Parameters
     ----------
@@ -1627,8 +1627,8 @@ def framing_on_tensor(x,power=1):
     r"""
     Apply the framing operator to each GMP component of a tensor product element.
 
-    For ``x = sum_mu c_mu * G_mu``, returns
-    ``sum_mu c_mu * prod_k DET(u_k * chi2d(mu_k))^power * G_mu``.
+    For ``x = sum_mu c_mu * P_mu``, returns
+    ``sum_mu c_mu * prod_k DET(u_k * chi2d(mu_k))^power * P_mu``.
 
     Parameters
     ----------
@@ -1691,7 +1691,7 @@ def Delta_on_tensor(z,x,power=1,dual=1):
 
 def GMMatrixElement(lam,nu):
     r"""
-    Compute one row of the eigenvalue-equation matrix for the GMP ``G_lam``.
+    Compute one row of the eigenvalue-equation matrix for the GMP ``P_lam``.
 
     The GMP is defined as a null vector of the matrix
     ``[x^{+}_0(P_nu) - eigenvalue(lam) * delta_{mu,nu}]_{mu,nu}``.
@@ -1721,9 +1721,9 @@ def GMPC(lam,mu):
     Compute the GMP change-of-basis coefficient ``C(lam, mu)``.
 
     This is the coefficient of ``P_mu`` (tensor product of Macdonald P-functions)
-    in the expansion of the GMP ``G_lam``:
+    in the expansion of the GMP ``P_lam``:
 
-        G_lam = sum_mu  C(lam, mu) * P_{mu_0} x ... x P_{mu_{N-1}}
+        P_lam = sum_mu  C(lam, mu) * P_{mu_0} x ... x P_{mu_{N-1}}
 
     Computed by finding the kernel of the eigenvalue-equation matrix; cached
     in ``GMPC_cache`` for reuse.
@@ -1789,13 +1789,13 @@ def GMPC(lam,mu):
 
 def GMP(lam):
     r"""
-    Compute the Generalized Macdonald P-function ``G_lam``.
+    Compute the Generalized Macdonald P-function ``P_lam``.
 
     The GMP for an N-tuple of partitions ``lam`` is the unique (up to scalar)
     simultaneous eigenfunction of the zero-mode ``x^{+}_0`` with eigenvalue
     ``eigenvalue(lam)``, expanded in the tensor product of Macdonald P-functions:
 
-        G_lam = sum_mu  C(lam, mu) * P_{mu_0} x ... x P_{mu_{N-1}}
+        P_lam = sum_mu  C(lam, mu) * P_{mu_0} x ... x P_{mu_{N-1}}
 
     At N=1 the GMP reduces to the standard Macdonald P-function ``P_lam``.
 
@@ -1852,9 +1852,9 @@ def tildeGMP(lam):
     r"""
     Compute the normalised GMP ``tilde{G}_lam``.
 
-    Divides ``G_lam`` by the product of principal specialisations:
+    Divides ``P_lam`` by the product of principal specialisations:
 
-        tilde{G}_lam = G_lam / prod_{k} P_{lam_k}(epsilon([]))
+        tilde{G}_lam = P_lam / prod_{k} P_{lam_k}(epsilon([]))
 
     Parameters
     ----------
@@ -1870,7 +1870,7 @@ def barGMP(lam):
     r"""
     Compute the GMP in a different normalisation {legacy; to be removed}.
 
-    Divides ``G_lam`` by its evaluation at ``(u_k * epsilon([]))``.
+    Divides ``P_lam`` by its evaluation at ``(u_k * epsilon([]))``.
 
     Parameters
     ----------
@@ -1941,7 +1941,7 @@ def to_gmp(x):
     Decompose a multi-symmetric function in the GMP basis.
 
     Returns the dictionary ``{lam: c_lam}`` such that
-    ``x = sum_lam c_lam * G_lam``, computed via the scalar product
+    ``x = sum_lam c_lam * P_lam``, computed via the scalar product
     ``<x, GMQ_mu>_Z``.
 
     Parameters
@@ -2082,12 +2082,12 @@ def pieri_set_minus(m,nu):
 
 def pieriTest(lam):
     r"""
-    Verify the elementary Pieri rule for the GMP ``G_lam``.
+    Verify the elementary Pieri rule for the GMP ``P_lam``.
 
     Checks that:
 
-        e_1(X_0 + ... + X_{N-1}) * G_lam
-        = sum_{i, nu: lam_i -> nu}  alpha_N(i, nu, lam) * psi'(nu, lam_i) * G_{lam with lam_i -> nu}
+        e_1(X_0 + ... + X_{N-1}) * P_lam
+        = sum_{i, nu: lam_i -> nu}  alpha_N(i, nu, lam) * psi'(nu, lam_i) * P_{lam with lam_i -> nu}
 
     Parameters
     ----------
@@ -2105,7 +2105,7 @@ def pieriTest(lam):
 
 def pieriTestDual(nu):
     r"""
-    Verify the dual (skew) Pieri rule for the GMP ``G_nu``.
+    Verify the dual (skew) Pieri rule for the GMP ``P_nu``.
 
     Parameters
     ----------
