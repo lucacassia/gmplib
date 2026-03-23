@@ -1,3 +1,18 @@
+#*****************************************************************************
+#       Copyright (C) 2024 Luca Cassia <luca.cassia@tuta.io>,
+#
+#  Distributed under the terms of the GNU General Public License (GPL)
+#
+#    This code is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    General Public License for more details.
+#
+#  The full text of the GPL is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
+
 r"""
 Generalized Macdonald Functions
 ================================
@@ -69,21 +84,6 @@ References
 - Feigin et al., "Quantum continuous gl_\infty" (2011).
 """
 
-#*****************************************************************************
-#       Copyright (C) 2024 Luca Cassia <luca.cassia@tuta.io>,
-#
-#  Distributed under the terms of the GNU General Public License (GPL)
-#
-#    This code is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#    General Public License for more details.
-#
-#  The full text of the GPL is available at:
-#
-#                  http://www.gnu.org/licenses/
-#*****************************************************************************
-
 # ---------------------------------------------------------------------------
 # Base ring, symbols, and symmetric function bases
 # ---------------------------------------------------------------------------
@@ -133,6 +133,42 @@ def mcdp_at_eps(lam):
     if lam not in _mcdp_eps_cache:
         _mcdp_eps_cache[lam] = ring(1) if lam == Partition([]) else McdP(lam)(epsilon([]))
     return _mcdp_eps_cache[lam]
+
+
+# ---------------------------------------------------------------------------
+# Multi-symmetric function construction utilities
+# ---------------------------------------------------------------------------
+
+def generators(N, basis=None):
+    r"""
+    Return the N standard degree-1 generators of an N-fold tensor product.
+
+    The i-th generator is the element with ``basis([1])`` in factor ``i``
+    and ``basis.one()`` in all other factors:
+
+        X_i = basis.one() ⊗ ... ⊗ basis([1]) ⊗ ... ⊗ basis.one()
+
+    This replaces the repeated inline construction::
+
+        [tensor([basis[1] if j==i else basis[[]] for j in range(N)])
+         for i in range(N)]
+
+    Parameters
+    ----------
+    N : int
+        Number of tensor factors.
+    basis : SymmetricFunctionAlgebra_generic, optional
+        The basis for all factors. Defaults to ``p`` (power-sum), which is
+        the canonical choice for generators used in vertex operators and
+        plethystic operations.
+
+    Returns
+    -------
+    list of N elements of ``tensor([basis]*N)``
+    """
+    if basis is None:
+        basis = p
+    return [ tensor([basis[1] if j == i else basis.one() for j in range(N)]) for i in range(N)]
 
 
 # ---------------------------------------------------------------------------
@@ -1197,8 +1233,7 @@ def e1t(N):
     -------
     element of ``Sym^{tensor N}``
     """
-    X = [tensor([p[1] if j==i else p.one() for j in range(N)]) for i in range(N)]
-    return sum(X)/epsilon([])
+    return sum(generators(N)) / epsilon([])
 
 def evalArg(x,arg):
     r"""
@@ -1272,9 +1307,9 @@ def subsr(x):
     -------
     element of ``Sym^{tensor N}``
     """
-    parent = x.parent().tensor_factors()
-    N = len(parent)
-    return sum( coeff.subs(r=-1) * tensor(map(lambda part,base: base(part),mu,parent)) for mu,coeff in x)
+    return x.parent()._from_dict(
+        {mpart: coeff.subs(r=-1) for mpart, coeff in x}
+    )
 
 def rev(x):
     r"""
@@ -1288,9 +1323,9 @@ def rev(x):
     -------
     element of ``Sym^{tensor N}``
     """
-    N = len(x.parent().tensor_factors())
-    x = coercion_on_tensor(x,[p]*N)
-    return sum(coeff*mPoly(reversed(mu),p) for mu,coeff in x)
+    return tensor(reversed(x.parent().tensor_factors()))._from_dict(
+        {tuple(reversed(mpart)): coeff for mpart, coeff in x}
+    )
 
 def scalar_Z(f,g):
     r"""
@@ -1312,7 +1347,7 @@ def scalar_Z(f,g):
     """
     ev = lambda k,x: p(k)(x) if k!=[] else 1
     N = len(g.parent().tensor_factors())
-    X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
+    X = generators(N)
     g = coercion_on_tensor(g,[p]*N)
     g = sum(coeff * prod(ev(mu[k],X[N-k-1]-(1-q3)*sum(q3**(j-N+k)*X[j] for j in range(N-k,N))) for k in range(N)) for mu,coeff in g)
     return scalar_on_tensor_qt(f,g)
@@ -1467,7 +1502,7 @@ def LAM(i,k,x):
     deg = degree_on_tensor(x)
     parent = x.parent().tensor_factors()
     N = len(parent)
-    X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
+    X = generators(N)
     twist = (1-q2)*(1-q3)*sum(X[j] for j in range(i))
     if twist == 0:
         return xplus_on_tensor(i,k,x)
@@ -1496,7 +1531,7 @@ def LAMast(i,k,x):
     deg = degree_on_tensor(x)
     parent = x.parent().tensor_factors()
     N = len(parent)
-    X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
+    X = generators(N)
     twist = -(1-q1**-1)*(1-q3**-1)*sum(q3**j*X[j] for j in range(i+1,N))
     if twist == 0:
         return xminus_on_tensor(i,k,x)
@@ -2075,7 +2110,7 @@ def pieriTest(lam):
     bool
     """
     N = len(lam)
-    X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
+    X = generators(N)
     lhs = e[1](sum(X))*GMP(lam)
     rhs = sum( sum(alpha_N(i,nu,lam)*psi_prime_PE(nu,lam[i])*GMP([lam[j] for j in range(i)]+[nu]+[lam[j] for j in range(i+1,N)]) for nu in Partition(lam[i]).up() ) for i in range(N))
     return rhs==lhs
@@ -2093,7 +2128,7 @@ def pieriTestDual(nu):
     bool
     """
     N = len(nu)
-    X = [tensor([p[1] if j==i else p[[]] for j in range(N)]) for i in range(N)]
+    X = generators(N)
     lhs = skew_on_tensor(GMP(nu),e[1]((1-q)/(1-t)*sum(q3**(i)*X[i] for i in range(N))))
     rhs = sum( prod( alpha2_N(i,nu,lam[i])*psi2_prime_PE(nu[i],lam[i]) for i in range(N)) * GMP(lam) for lam in pieri_set_minus(1,nu))
     return lhs==rhs
