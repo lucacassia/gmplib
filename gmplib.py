@@ -2245,6 +2245,12 @@ def to_math_l(x):
 # Magnus expansion (to be optimized!!)
 # ---------------------------------------------------------------------------
 
+def mMcdP(lam):
+    r"""
+    Returns McdP(lam[0]) ⊗ ... ⊗ McdP(lam[N-1])
+    """
+    return tensor([McdP(part) for part in lam])
+
 def DT(x,lam,power):
     r"""
     Diagonal part of the eigenvalue operator whose kernel is spanned by GMP(lam)
