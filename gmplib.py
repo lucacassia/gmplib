@@ -2240,3 +2240,50 @@ def to_math_l(x):
     for mu,coeff in x:
         res += str(factor(coeff))+","
     return "{"+res[:-1]+"}"
+
+# ---------------------------------------------------------------------------
+# Magnus expansion (to be optimized!!)
+# ---------------------------------------------------------------------------
+
+def DT(x,lam,power):
+    r"""
+    Diagonal part of the eigenvalue operator whose kernel is spanned by GMP(lam)
+    """
+    if x == 0:
+        return 0
+    old_parent = x.parent().tensor_factors()
+    N = len(old_parent)
+    x = coercion_on_tensor(x,[McdP]*N)
+    res = sum( (eigenvalue(lam)-eigenvalue(key))**power * val * mPoly(key,McdP) for key,val in x)
+    return coercion_on_tensor(res,old_parent)
+
+def D(x):
+    r"""
+    Diagonal part of x^{+}_{0} at level N acting on x
+    """
+    if x == 0:
+        return 0
+    old_parent = x.parent().tensor_factors()
+    N = len(old_parent)
+    x = coercion_on_tensor(x,[McdP]*N)
+    res = sum( eigenvalue(key) * val * mPoly(key,McdP) for key,val in x)
+    return coercion_on_tensor(res,old_parent)
+
+def X(x):
+    r"""
+    Off-diagonal part of x^{+}_{0} at level N acting on x
+    """
+    if x == 0:
+        return 0
+    return xplus(0,x) - D(x)
+
+def magnus_exp(lam):
+    r"""
+    Magnus expansion formula for obtaining GMP(lam)
+    """
+    res = mPoly(lam,McdP)
+    tmp = res
+    while tmp != 0:
+        tmp = DT(X(tmp),lam,power=-1)
+        res += tmp
+    return res
