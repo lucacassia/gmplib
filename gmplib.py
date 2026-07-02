@@ -91,20 +91,19 @@ References
 import time
 from sage.all import *
 
-N = 30
+N = 30  # hard coded --> need to find better solution
 param = list('u%d'%i for i in range(N)) + list('v%d'%i for i in range(N)) + ['q','t','r','z','Q']
 
 Sym = SymmetricFunctions(FractionField(PolynomialRing(QQ,param)))
 ring = Sym.base_ring()
-(q,t,r,z,Q) = [ring.gens()[i] for i in range(2*N,2*N+5)]
+(q,t,r,z,Q) = ring.gens()[2*N:2*N+5]
 u = list(ring(var('u%d' % i)) for i in range(N))
 v = list(ring(var('v%d' % i)) for i in range(N))
 
 # The three deformation parameters satisfying q1*q2*q3 = 1
 q1=q
 q2=1/t
-q3=t/q
-kappa1=(1-q1)*(1-q2)*(1-q3)
+q3=1/(q1*q2)
 
 L = LaurentPolynomialRing(QQ,param)
 F = L.fraction_field()
