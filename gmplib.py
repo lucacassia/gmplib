@@ -121,16 +121,14 @@ s = Sym.Schur()
 GMPC_cache = dict({})
 
 # Session-only cache for McdP(lam)(epsilon([])) evaluations.
-# Keyed on Partition objects. Since e[m] = McdP([1]*m) and McdP[m] = McdP([m]),
-# all three are handled by this single cache.
 _mcdp_eps_cache = {}
 
 def mcdp_at_eps(lam):
     """Return McdP(lam)(epsilon([])), cached for the duration of the session.
-    The empty partition is hardcoded to ring(1) to avoid evaluation errors."""
+    Rewritten using the specialization formula in Macdonald's book Ch.VI, (6.17)."""
     lam = Partition(lam)
     if lam not in _mcdp_eps_cache:
-        _mcdp_eps_cache[lam] = ring(1) if lam == Partition([]) else McdP(lam)(epsilon([]))
+        _mcdp_eps_cache[lam] = prod(-q**j/(1-q**lam.arm_length(i,j)*t**(lam.leg_length(i,j)+1)) for i,j in lam.cells())
     return _mcdp_eps_cache[lam]
 
 
@@ -2245,6 +2243,195 @@ def to_math_l(x):
 # Magnus expansion (to be optimized!!)
 # ---------------------------------------------------------------------------
 
+def e1mul(x):
+    r"""
+    Implements the Pieri operator in a combinatorial way
+    Returns e[1] * x
+    """
+    if x.parent() != McdP:
+        x = coercion_safe(x,McdP)
+    return sum( psi_prime_PE(nu,lam) * coeff * McdP(nu) for lam,coeff in x for nu in Partition(lam).up())
+
+def e1del(x):
+    r"""
+    Implements the dual Pieri operator in a combinatorial way
+    Returns x.skew_by(e[1])
+    """
+    if x.degree() <= 0:
+        return McdP.zero()
+    if x.parent() != McdP:
+        x = coercion_safe(x,McdP)
+    return (1-t)/(1-q) * sum( psi2_prime_PE(nu,lam) * coeff * McdP(lam) for nu,coeff in x for lam in Partition(nu).down())
+
+def x_comb(sgn,k,x):
+    r"""
+    Implements the x^{sgn}_{k} operator (at level 1) in a combinatorial way
+    WARNING: it has opposite labeling for k, i.e. x_comb(+1,k,x) == xplus_k(-k,x)
+    """
+    if x == 0:
+        return McdP.zero()
+    parent = x.parent()
+    if parent != McdP:
+        x = coercion_safe(x,McdP)
+    if k == 0:
+        res = sum( x2d(mu,sgn) * coeff * McdP(mu) for mu,coeff in x)
+    elif k > 0:
+        res = ( e1del(x_comb(sgn,k-1,x)) - x_comb(sgn,k-1,e1del(x)) ) / (1-q2**sgn)
+    else:
+        res = ( e1mul(x_comb(sgn,k+1,x)) - x_comb(sgn,k+1,e1mul(x)) ) / (1-q1**sgn)
+    if parent != McdP:
+        res = coercion_safe(res,parent)
+    return res
+
+# ---------------------------------------------------------------------------
+# Path enumeration
+# ---------------------------------------------------------------------------
+
+def x_fast(sgn, k, x):
+    r"""
+    Compute x^{sgn}_k(x) by direct enumeration of paths in the Young diagram
+    lattice, using only Partition.down()/up() and psi2_prime_PE/psi_prime_PE.
+
+    Parameters
+    ----------
+    sgn : int
+        Current index. Can be either +1 or -1.
+    k : int
+        Mode index. Positive removes boxes (uses psi2_prime_PE + .down()),
+        negative adds boxes (uses psi_prime_PE + .up()).
+    x : McdP element
+        The symmetric function to act on.
+
+    Returns
+    -------
+    McdP element
+
+    ALGORITHM
+    ---------
+    Maintain state[nu] = [A, C] where, after j steps:
+
+        A[nu] = sum_{paths of length j ending at nu} (Pieri product)
+
+        C[nu] = sum_{paths of length j ending at nu}
+                  (Pieri product) * (sum_{i=0}^j (-1)^i C(|k|,i) x2d(mu^i))
+
+    Transition from step j to j+1 (remove/add box: nu -> nu'):
+
+        w  = psi2_prime_PE(nu, nu')    [or psi_prime_PE(nu', nu) for addition]
+        A' += w * A
+        C' += w * (C + (-1)^{j+1} * C(|k|, j+1) * x2d(nu') * A)
+
+    After |k| steps the result is:
+
+        const * sum_nu C[nu] * P_nu
+
+    COMPLEXITY
+    ----------
+    k steps, each O(|state| * corners_per_partition).
+    |state| <= p(n), corners_per_partition <= sqrt(2n).
+    Total: O(|k| * p(n) * sqrt(n)) -- polynomial vs O(2^|k|) recursive.
+    """
+    if x == 0:
+        return McdP.zero()
+
+    if x.parent() != McdP:
+        raise TypeError("input should be in the McdP basis")
+
+    if k == 0:
+        return sum(x2d(mu,sgn) * coeff * McdP(mu) for mu, coeff in x)
+
+    m = abs(k)
+
+    # ------------------------------------------------------------------
+    # Initialise state from the support of x
+    # A[mu] = coefficient of P_mu in x      (= the j=0 Pieri product, trivially)
+    # C[mu] = coefficient * x^{sgn}_{\mu}   (the j=0 eigenvalue term: (-1)^0 C(m,0) x2d(mu^0))
+    # ------------------------------------------------------------------
+    state = {mu:[coeff, x2d(mu,sgn) * coeff] for mu, coeff in x}   # Partition -> [A, C]
+
+    if k > 0:
+        for step in range(m):
+            # New term in the alternating sum: (-1)^{step+1} * C(m, step+1) * x2d(nu')
+            bs = ((-1)**(step + 1)) * binomial(m, step + 1)
+            new_state = {}
+            for nu, (A, C) in state.items():
+                for nu_prime in nu.down():
+                    w = psi2_prime_PE(nu, nu_prime)   # (larger, smaller)
+                    dA = w * A
+                    dC = w * (C + bs * x2d(nu_prime,sgn) * A)
+                    if nu_prime in new_state:
+                        new_state[nu_prime][0] += dA
+                        new_state[nu_prime][1] += dC
+                    else:
+                        new_state[nu_prime] = [dA, dC]
+            state = new_state
+            if not state:
+                return McdP.zero()
+
+        const = ( (1 - t) / (1 - q) / (1 - q2**sgn) )**m
+
+    else:
+        for step in range(m):
+            bs = ((-1)**(step + 1)) * binomial(m, step + 1)
+            new_state = {}
+            for nu, (A, C) in state.items():
+                for nu_prime in nu.up():
+                    w = psi_prime_PE(nu_prime, nu)    # (larger, smaller)
+                    dA = w * A
+                    dC = w * (C + bs * x2d(nu_prime,sgn) * A)
+                    if nu_prime in new_state:
+                        new_state[nu_prime][0] += dA
+                        new_state[nu_prime][1] += dC
+                    else:
+                        new_state[nu_prime] = [dA, dC]
+            state = new_state
+
+        const = ( 1 / (1 - q1**sgn) )**m
+
+    if not state:
+        return McdP.zero()
+
+    return const * sum(C * McdP(nu) for nu, (_, C) in state.items())
+
+def psi_fast(k,x):
+    if x == 0:
+        return 0
+    if k == 0:
+        return x
+    return sgn(k) * sum( (x2d(lam,-1)-x2d(mu,-1)) * coeff1 *  coeff2 * McdP(mu) for lam, coeff1 in x for mu, coeff2 in x_fast(1,-k,McdP(lam)) ) / ( q3*(1-q1)*(1-q2)/(1-q3) )
+
+def x_fast_on_tensor(i,sgn,k,x):
+    parent = x.parent().tensor_factors()
+    return sum( coeff * tensor( [parent[j](mu[j]) for j in range(i)]
+                               +[x_fast(sgn,k,parent[i](mu[i]))]
+                               +[parent[j](mu[j]) for j in range(i+1,len(mu))] ) for mu, coeff in x)
+
+def psi_fast_on_tensor(i,k,x):
+    parent = x.parent().tensor_factors()
+    return sum( coeff * tensor( [parent[j](mu[j]) for j in range(i)]
+                               +[psi_fast(k,parent[i](mu[i]))]
+                               +[parent[j](mu[j]) for j in range(i+1,len(mu))] ) for mu, coeff in x)
+
+def LAM_fast(i,k,x):
+    if i == 0:
+        return x_fast_on_tensor(i,+1,k,x)
+    else:
+        res = 0
+        for mu, coeff in x:
+            for m in range(-k,sum(mu[i])+1):
+                base = coeff * x_fast_on_tensor(i,+1,m,mMcdP(mu))
+                for a in vectors_with_int(i,m-k):
+                    tmp = base
+                    for j in range(i):
+                        tmp = psi_fast_on_tensor(j,a[j],tmp)
+                    res += tmp
+        return res
+
+def xplus_fast(k,x):
+    N = len(x.parent().tensor_factors())
+    return sum(ring(u[i])*LAM_fast(i,k,x) for i in range(N))
+
+
 def mMcdP(lam):
     r"""
     Returns McdP(lam[0]) ⊗ ... ⊗ McdP(lam[N-1])
@@ -2257,39 +2444,39 @@ def DT(x,lam,power):
     """
     if x == 0:
         return 0
-    old_parent = x.parent().tensor_factors()
-    N = len(old_parent)
-    x = coercion_on_tensor(x,[McdP]*N)
-    res = sum( (eigenvalue(lam)-eigenvalue(key))**power * val * mPoly(key,McdP) for key,val in x)
-    return coercion_on_tensor(res,old_parent)
 
-def D(x):
+    if not all(basis == McdP for basis in x.parent().tensor_factors()):
+        raise TypeError("input should be in the McdP basis")
+
+    return sum( (eigenvalue(lam)-eigenvalue(mu))**power * coeff * mMcdP(mu) for mu, coeff in x)
+
+def DD(x):
     r"""
     Diagonal part of x^{+}_{0} at level N acting on x
     """
     if x == 0:
         return 0
-    old_parent = x.parent().tensor_factors()
-    N = len(old_parent)
-    x = coercion_on_tensor(x,[McdP]*N)
-    res = sum( eigenvalue(key) * val * mPoly(key,McdP) for key,val in x)
-    return coercion_on_tensor(res,old_parent)
 
-def X(x):
+    if not all(basis == McdP for basis in x.parent().tensor_factors()):
+        raise TypeError("input should be in the McdP basis")
+
+    return sum( eigenvalue(mu) * coeff * mMcdP(mu) for mu, coeff in x)
+
+def XX(x):
     r"""
     Off-diagonal part of x^{+}_{0} at level N acting on x
     """
     if x == 0:
         return 0
-    return xplus(0,x) - D(x)
+    return xplus_fast(0,x) - DD(x)
 
 def magnus_exp(lam):
     r"""
     Magnus expansion formula for obtaining GMP(lam)
     """
-    res = mPoly(lam,McdP)
+    res = mMcdP(lam)
     tmp = res
     while tmp != 0:
-        tmp = DT(X(tmp),lam,power=-1)
+        tmp = DT(XX(tmp),lam,power=-1)
         res += tmp
     return res
