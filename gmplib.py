@@ -482,20 +482,20 @@ def Kronecker_delta(x,y):
 # Content and eigenvalue functions
 # ---------------------------------------------------------------------------
 
-def epsilon(part,power=1):
+def epsilon(lam,power=1):
     r"""
     Compute the epsilon specialisation argument for a partition.
 
-    The epsilon map encodes the generating series of box contents of ``part``:
+    The epsilon map encodes the generating series of box contents of ``lam``:
 
-        epsilon(part) = sum_{i} q^{part[i]} * t^{-i-1}  +  t^{-len(part)-1} / (1 - 1/t)
+        epsilon(lam) = sum_{i} q^{lam[i]} * t^{-i-1}  +  t^{-len(lam)-1} / (1 - 1/t)
 
-    Evaluating a Macdonald P-function at ``epsilon(mu)`` gives the specialisation
+    Evaluating a Macdonald P-function at ``epsilon(lam)`` gives the specialisation
     appearing in the Macdonald-Koornwinder duality.
 
     Parameters
     ----------
-    part : Partition
+    lam : Partition
     power : int, optional
         Rescaling exponent applied to both ``q`` and ``t`` (default 1).
 
@@ -503,7 +503,8 @@ def epsilon(part,power=1):
     -------
     rational function
     """
-    res = sum(q**(part[i])*t**(-i-1) for i in range(len(part))) + t**(-len(part)-1)/(1-1/t)
+    # res = sum(q**(part[i])*t**(-i-1) for i in range(len(part))) + t**(-len(part)-1)/(1-1/t)
+    res = x2d(lam) * mcdp_at_eps([1])
     return res.subs(q=q**power,t=t**power)
 
 def eigenvalue(lam):
@@ -1160,10 +1161,10 @@ def scalar_on_tensor_qt(x,y):
     -------
     rational function
     """
-    l = len(x.parent().tensor_factors())
-    x = coercion_on_tensor(x,[McdP]*l)
-    y = coercion_on_tensor(y,[McdQ]*l)
-    return sum( sum( c1 * c2 * prod(map(lambda k1,k2: Kronecker_delta(k1,k2),lam,mu)) for lam,c1 in x) for mu,c2 in y)
+    N = len(x.parent().tensor_factors())
+    x = coercion_on_tensor(x,[McdP]*N)
+    y = coercion_on_tensor(y,[McdQ]*N)
+    return sum( c1 * c2 * prod(map(lambda k1,k2: Kronecker_delta(k1,k2),lam,mu)) for lam,c1 in x for mu,c2 in y)
 
 def counit_on_tensor(x):
     r"""
@@ -1193,7 +1194,9 @@ def counit_on_tensor2(x):
     -------
     rational function
     """
-    return sum( coeff * prod(Kronecker_delta(k,[]) for k in mu) for mu,coeff in x)
+    N = len(x.parent().tensor_factors())
+    em = tuple([Partition([])]*N)
+    return x[em]
 
 def level(n,x):
     r"""
@@ -1211,8 +1214,7 @@ def level(n,x):
     """
     N = len(x.parent().tensor_factors())
     x = coercion_on_tensor(x,[p]*N)
-    dd = dict(x)
-    return sum(dd[key]*mPoly(key,p) for key in dd if sum(map(sum,key))==n)
+    return sum(coeff * mPoly(mu,p) for mu,coeff in x if sum(map(sum,mu))==n)
 
 def e1t(N):
     r"""
@@ -1407,26 +1409,6 @@ def xminus_k(k,x):
         res = x.skew_by(s([-k])(-(1-q**-1)*s([1]))) + sum(s([i+1])((1-t)*s([1]))*x.skew_by(s([i+1-k])(-(1-q**-1)*s([1]))) for i in range(degree))
     return coercion_safe(res,parent)
 
-# def M_k(k,x):
-#     parent = x.parent()
-#     degree = x.degree()
-#     x = coercion_safe(x,s)
-#     if k >= 0:
-#         res = s([k])((1-q2)*s([1]))*x + sum(s([j+1+k])((1-q2)*s([1]))*x.skew_by(s([j+1])(-(1-q1)*s([1]))) for j in range(degree))
-#     else:
-#         res = x.skew_by(s([-k])(-(1-q1)*s([1]))) + sum(s([i+1])((1-q2)*s([1]))*x.skew_by(s([i+1-k])(-(1-q1)*s([1]))) for i in range(degree))
-#     return coercion_safe(res,parent)
-
-# def Mast_k(k,x):
-#     parent = x.parent()
-#     degree = x.degree()
-#     x = coercion_safe(x,s)
-#     if k >= 0:
-#         res = s([k])(-(1-q2)*s([1]))*x + sum(s([j+1+k])(-(1-q2)*s([1]))*x.skew_by(s([j+1])((1-q1)*q3*s([1]))) for j in range(degree))
-#     else:
-#         res = x.skew_by(s([-k])((1-q1)*q3*s([1]))) + sum(s([i+1])(-(1-q2)*s([1]))*x.skew_by(s([i+1-k])((1-q1)*q3*s([1]))) for i in range(degree))
-#     return coercion_safe(res,parent)
-
 def xplus_on_tensor(i,k,x):
     r"""
     Apply the operator ``x^{+}_k`` to the i-th factor of a tensor product.
@@ -1610,7 +1592,8 @@ def testEigenfunction(mu):
         True
     """
     poly = GMP(mu)
-    return xplus(0,poly) == eigenvalue(mu)*poly
+    poly = coercion_on_tensor(poly,[s]*len(mu))
+    return xplus(0,poly) == eigenvalue(mu)*poly     # to be updated to x_fast
 
 def framing(x,power=1):
     r"""
@@ -1631,7 +1614,8 @@ def framing(x,power=1):
     """
     par = x.parent()
     x = coercion_safe(x,McdP)
-    return coercion_safe(sum( DET(chi2d(lam))**power*coeff*McdP(lam) for lam,coeff in x),par)
+    res = sum( coeff * DET(chi2d(lam))**power * McdP(lam) for lam, coeff in x)
+    return coercion_safe(res, par)
 
 def framing_on_tensor(x,power=1):
     r"""
@@ -1650,8 +1634,7 @@ def framing_on_tensor(x,power=1):
     -------
     element of ``Sym^{tensor N}``
     """
-    dd = to_gmp(x)
-    return sum(dd[mu] * prod(DET(u[k]*chi2d(mu[k]))**power for k in range(len(mu))) * GMP(mu) for mu in dd)
+    return sum(coeff * prod(DET(u[k]*chi2d(mu[k]))**power for k in range(len(mu))) * GMP(mu) for mu,coeff in to_gmp(x).items())
 
 def Delta(z,x,power=1,dual=1):
     r"""
@@ -1674,7 +1657,8 @@ def Delta(z,x,power=1,dual=1):
     """
     par = x.parent()
     x = coercion_safe(x,McdP)
-    return coercion_safe( sum(PE(-power*z*chi2d(mu,dual))*c*McdP(mu) for mu,c in x) , par)
+    res = sum(coeff * PE(-power*z*chi2d(mu,dual)) * McdP(mu) for mu,coeff in x)
+    return coercion_safe(res, par)
 
 def Delta_on_tensor(z,x,power=1,dual=1):
     r"""
@@ -1691,8 +1675,7 @@ def Delta_on_tensor(z,x,power=1,dual=1):
     -------
     element of ``Sym^{tensor N}``
     """
-    dd = to_gmp(x)
-    return sum(dd[mu] * prod(PE(-power*z*u[k]*chi2d(mu[k],dual)) for k in range(len(mu))) * GMP(mu) for mu in dd)
+    return sum(coeff * prod(PE(-power*z*u[k]*chi2d(mu[k],dual)) for k in range(len(mu))) * GMP(mu) for mu, coeff in to_gmp(x).items())
 
 
 # ---------------------------------------------------------------------------
@@ -1722,8 +1705,7 @@ def GMMatrixElement(lam,nu):
     if len(lam) != len(nu):
         return 0
     degree = sum(map(sum,lam))
-    poly = xplus(0,mPoly(nu,McdP))
-    poly = coercion_on_tensor(poly,[McdP]*len(nu))
+    poly = xplus_fast(0,mMcdP(nu))
     return [poly[mu] - eigenvalue(lam)*Kronecker_delta(mu,nu) for mu in mPartitions(len(lam),degree)]
 
 def GMPC(lam,mu):
@@ -1833,7 +1815,7 @@ def GMP(lam):
     degree = sum(map(sum,lam))
     N = len(lam)
     mparts = mPartitions(N,degree)
-    return sum(mPoly(mu,McdP)*GMPC(lam,mu) for mu in mparts)
+    return sum(mMcdP(mu) * GMPC(lam,mu) for mu in mparts)
 
 def GMQ(lam):
     r"""
@@ -1855,7 +1837,7 @@ def GMQ(lam):
     """
     N = len(lam)
     rlam = tuple(reversed(lam))
-    poly = sum(coeff.subs({u[i]:u[N-i-1] for i in range(N)}) * mPoly(mu,p) for mu,coeff in GMP(rlam))
+    poly = sum(coeff.subs({u[i]:u[N-i-1] for i in range(N)}) * mMcdP(mu) for mu, coeff in GMP(rlam))
     return poly * prod(b_lambda(lam[i]) for i in range(N))
 
 def tildeGMP(lam):
@@ -1891,7 +1873,7 @@ def barGMP(lam):
     element of ``Sym^{tensor N}``
     """
     N = len(lam)
-    poly = GMP(lam)
+    poly = coercion_on_tensor(GMP(lam),[p]*N)
     return poly/evaluate_on_tensor(poly,[u[k]*epsilon([]) for k in range(N)])
 
 def GMK(lam):
@@ -1911,7 +1893,8 @@ def GMK(lam):
     element of ``Sym^{tensor N}``
     """
     N = len(lam)
-    return subsr(diag_plethysm(framing_on_tensor(tildeGMP(lam)),[q2*p[1]-r*epsilon([])*q3**k for k in range(N)]))
+    poly = coercion_on_tensor(framing_on_tensor(tildeGMP(lam)),[p]*N)
+    return subsr(diag_plethysm(poly,[q2*p[1]-r*epsilon([])*q3**k for k in range(N)]))
 
 def iGMP(lam):
     r"""
@@ -1926,7 +1909,7 @@ def iGMP(lam):
     element of ``Sym^{tensor N}``
     """
     N = len(lam)
-    return sum(coeff.subs({u[i]:u[N-i-1] for i in range(N)}) * mPoly(mu,p) for mu,coeff in GMP(tuple(reversed(lam))))
+    return GMP(tuple(reversed(lam))).map_coefficients(lambda c:c.subs({u[i]:u[N-i-1] for i in range(N)}))
 
 def GMPast(lam):
     r"""
@@ -2107,8 +2090,8 @@ def pieriTest(lam):
     bool
     """
     N = len(lam)
-    X = generators(N)
-    lhs = e[1](sum(X))*GMP(lam)
+    X = generators(N, basis=s)
+    lhs = coercion_on_tensor(sum(X) * coercion_on_tensor(GMP(lam),[s]*N),[McdP]*N)
     rhs = sum( sum(alpha_N(i,nu,lam)*psi_prime_PE(nu,lam[i])*GMP([lam[j] for j in range(i)]+[nu]+[lam[j] for j in range(i+1,N)]) for nu in Partition(lam[i]).up() ) for i in range(N))
     return rhs==lhs
 
@@ -2126,8 +2109,8 @@ def pieriTestDual(nu):
     """
     N = len(nu)
     X = generators(N)
-    lhs = skew_on_tensor(GMP(nu),e[1]((1-q)/(1-t)*sum(q3**(i)*X[i] for i in range(N))))
-    rhs = sum( prod( alpha2_N(i,nu,lam[i])*psi2_prime_PE(nu[i],lam[i]) for i in range(N)) * GMP(lam) for lam in pieri_set_minus(1,nu))
+    lhs = skew_on_tensor(coercion_on_tensor(GMP(nu),[s]*N),e[1]((1-q)/(1-t)*sum(q3**(i)*X[i] for i in range(N))))
+    rhs = sum( prod( alpha2_N(i,nu,lam[i])*psi2_prime_PE(nu[i],lam[i]) for i in range(N)) * coercion_on_tensor(GMP(lam),[s]*N) for lam in pieri_set_minus(1,nu))
     return lhs==rhs
 
 
@@ -2240,7 +2223,7 @@ def to_math_l(x):
     return "{"+res[:-1]+"}"
 
 # ---------------------------------------------------------------------------
-# Magnus expansion (to be optimized!!)
+# Magnus expansion
 # ---------------------------------------------------------------------------
 
 def e1mul(x):
@@ -2266,7 +2249,7 @@ def e1del(x):
 def x_comb(sgn,k,x):
     r"""
     Implements the x^{sgn}_{k} operator (at level 1) in a combinatorial way
-    WARNING: it has opposite labeling for k, i.e. x_comb(+1,k,x) == xplus_k(-k,x)
+    using commutation relations in the quantum toroidal algebra.
     """
     if x == 0:
         return McdP.zero()
@@ -2287,7 +2270,7 @@ def x_comb(sgn,k,x):
 # Path enumeration
 # ---------------------------------------------------------------------------
 
-def x_fast(sgn, k, x):
+def x_fast(sgn, k, x):  # to be renamed!
     r"""
     Compute x^{sgn}_k(x) by direct enumeration of paths in the Young diagram
     lattice, using only Partition.down()/up() and psi2_prime_PE/psi_prime_PE.
