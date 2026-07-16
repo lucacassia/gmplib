@@ -2383,13 +2383,13 @@ def LAM_fast(i,k,x):
         return x_fast_on_tensor(i,+1,k,x)
     res = 0
     for mu, coeff in x:
-        for m in range(k,sum(mu[i])+1):
-            base = coeff * x_fast_on_tensor(i,+1,m,mMcdP(mu))
-            for a in vectors_with_int(i,m-k):
-                tmp = base
-                for j in range(i):
-                    tmp = psi_fast_on_tensor(j,a[j],tmp)
-                res += tmp
+        range_a = filter(lambda a:sum(a) <= sum(mu[i])-k, product(*[range(sum(mu[i])-k+1) for j in range(i)]))
+        range_j = range(i)
+        for a in range_a:
+            tmp = coeff * x_fast_on_tensor(i,+1,k+sum(a),mMcdP(mu))
+            for j in range_j:
+                tmp = psi_fast_on_tensor(j,a[j],tmp)
+            res += tmp
     return res
 
 def LAM_star_fast(i, k, x):    # possibly absorb into a unique definition together with LAM_fast
@@ -2398,14 +2398,14 @@ def LAM_star_fast(i, k, x):    # possibly absorb into a unique definition togeth
     if not all(basis == McdP for basis in parent):
         raise TypeError("input should be in the McdP basis")
     if i == N - 1:
-        return q3**(i*k) * x_fast_on_tensor(i, -1, k, x)
+        return q3**(i*k) * x_fast_on_tensor(i,-1,k,x)
     res = 0
     for mu, coeff in x:
-        for a in product(*[range(sum(mu[j])+1) for j in range(i+1,N)]):
-            if not ( sum(a) >= k-sum(mu[i]) ):
-                continue
+        range_a = filter(lambda a:-sum(a) <= sum(mu[i])-k, product(*[range(sum(mu[j])+1) for j in range(i+1,N)]))
+        range_j = range(i+1,N)
+        for a in range_a:
             tmp = coeff * q3**(i*(k-sum(a))) * x_fast_on_tensor(i,-1,k-sum(a),mMcdP(mu))
-            for j in range(i+1,N):
+            for j in range_j:
                 tmp = (q2 * q3**j)**a[j-i-1] * psi_fast_on_tensor(j,-a[j-i-1],tmp)
             res += tmp
     return res
