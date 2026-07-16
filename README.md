@@ -113,8 +113,8 @@ Polynomial-time implementations of the vertex-operator action, built directly fr
 | `x_fast(sgn, k, x)` | Single-copy operator $x^{\pm}_k$ (level 1), via direct path enumeration on Young diagrams |
 | `psi_fast(k, x)` | Single-copy Cartan current $\varphi^{\pm}_k$ |
 | `x_fast_on_tensor(i, sgn, k, x)` / `psi_fast_on_tensor(i, k, x)` | Apply the corresponding single-copy operator to tensor factor `i`, identity elsewhere |
-| `LAM_fast(i, k, x)` / `LAM_star_fast(i, k, x)` | Mode-$k$ component of $\Lambda^{(i)}(z)$ / $\Lambda^{*(i)}(z)$, the coproduct pieces of $x^+(z)$ / $x^-(z)$ |
-| `xplus_fast(k, x)` / `xminus_fast(k, x)` | Full N-component raising/lowering generator, `sum_i u_i^{\pm1} * LAM_(star_)fast(i,k,x)` |
+| `LAM_fast(i, sgn, k, x)` | Mode-$k$ component of $\Lambda^{(i)}(z)$ / $\Lambda^{*(i)}(z)$, the coproduct pieces of $x^+(z)$ / $x^-(z)$ |
+| `drinfeld(sgn, k, x)` | Level-$N$ implementation of the Drinfeld currents, `sum_i u_i^{sgn} * LAM_fast(i,sgn,k,x)` |
 | `x_comb(sgn, k, x)` | Reference recursive definition of `x_fast` via commutators — exponential-time, useful for cross-checking `x_fast` on small cases |
 | `mMcdP(lam)` | $P_{\lambda^{(0)}} \otimes \cdots \otimes P_{\lambda^{(N-1)}}$, the pure tensor of ordinary Macdonald P-functions |
 
@@ -137,7 +137,7 @@ Polynomial-time implementations of the vertex-operator action, built directly fr
 |----------|-------------|
 | `xplus(k, x)` / `xminus(k, x)` | Full N-component raising/lowering generator, symbolic (non-fast) reference implementation |
 | `xplus_k(k, x)` / `xminus_k(k, x)` | Single-copy vertex operator mode, symbolic reference implementation |
-| `LAM(i, k, x)` / `LAMast(i, k, x)` | Symbolic reference implementation of the twisted per-factor operator (cf. `LAM_fast`/`LAM_star_fast`) |
+| `LAM(i, k, x)` / `LAMast(i, k, x)` | Symbolic reference implementation of the twisted per-factor operator (cf. `LAM_fast`) |
 | `testEigenfunction(mu)` | Verify $x^{+}_0 P_{\boldsymbol{\mu}} = \mathrm{eigenvalue}(\boldsymbol{\mu}) \, P_{\boldsymbol{\mu}}$ |
 | `framing(x, power)` / `framing_on_tensor(x, power)` | Apply the framing operator (single-copy / tensor product) |
 | `Delta(z, x, power, dual)` / `Delta_on_tensor(...)` | Apply the $\Delta$ operator used in building instanton partition functions |
@@ -160,7 +160,7 @@ Polynomial-time implementations of the vertex-operator action, built directly fr
 | `DET(x)` | Determinant factor $\prod_m z^{c_m}$ of a Laurent polynomial |
 | `epsilon(lam, power)` | Epsilon specialisation argument $\varepsilon_\lambda$ (Macdonald–Koornwinder duality) |
 | `mcdp_at_eps(lam)` | $P_\lambda(\varepsilon_\emptyset)$, the principal specialisation of the ordinary Macdonald P-function, cached |
-| `eigenvalue(lam)` | Eigenvalue of the generalised Macdonald operator on `GMP(lam)` |
+| `eigenvalue(lam, power)` | Eigenvalue of the generalized Macdonald operator on `GMP(lam)` |
 | `chi2d(lam, power)` | Content sum $\chi_\lambda = \sum_{(i,j)\in\lambda} q_1^{j} q_2^{i}$ |
 | `x2d(lam, power)` | $x_\lambda = 1-(1-q_1)(1-q_2)\chi_\lambda = \varepsilon_\lambda/\varepsilon_\emptyset$ |
 | `w(mu)` | Macdonald weight appearing in the Cauchy identity for modified Macdonald functions |
