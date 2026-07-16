@@ -2390,7 +2390,7 @@ def LAM_fast(i,sgn,k,x):
         range_a = lambda i,k,mu:filter(lambda a:sum(a) <= sum(mu[i])-k, product(*[range(sum(mu[i])-k+1) for j in range_j]))
         edge_case = 0
     if sgn == 0:
-        raise TypeError("sgn cannot be zero")
+        raise ValueError("sgn cannot be zero")
     if sgn < 0:
         c_tmp_base = lambda a: q3**(i*(k-sum(a)))
         c_tmp_step = lambda idx,j,a: (q2 * q3**j)**a[idx]
