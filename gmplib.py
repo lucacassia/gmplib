@@ -507,7 +507,7 @@ def epsilon(lam,power=1):
     res = x2d(lam) * mcdp_at_eps([1])
     return res.subs(q=q**power,t=t**power)
 
-def eigenvalue(lam):
+def eigenvalue(lam,power=1):
     r"""
     Compute the eigenvalue of the GMP ``P_lam`` under the zero-mode ``x^{+}_0``.
 
@@ -525,7 +525,7 @@ def eigenvalue(lam):
     rational function
         Rational function of q, t, u_i.
     """
-    return sum(u[i]*x2d(lam[i]) for i in range(len(lam)))
+    return sum(u[i]**power*x2d(lam[i],power) for i in range(len(lam)))
 
 def w(mu):
     r"""
@@ -1488,35 +1488,6 @@ def LAM(i,k,x):
     else:
         return sum( s([k-b])(twist) * xplus_on_tensor(i,b,x) for b in range(-deg,k)) + xplus_on_tensor(i,k,x)
 
-def LAMast(i,k,x):
-    r"""
-    Apply the twisted operator ``Lambda^*_{i,k}`` to a tensor product.
-
-    The dual counterpart of :func:`LAM`, with a twist by the spectral parameters
-    ``u_j`` for ``j > i``.
-
-    Parameters
-    ----------
-    i : int
-        Component index.
-    k : int
-        Mode number.
-    x : element of ``Sym^{tensor N}``
-
-    Returns
-    -------
-    element of ``Sym^{tensor N}``
-    """
-    deg = degree_on_tensor(x)
-    parent = x.parent().tensor_factors()
-    N = len(parent)
-    X = generators(N)
-    twist = -(1-q1**-1)*(1-q3**-1)*sum(q3**j*X[j] for j in range(i+1,N))
-    if twist == 0:
-        return xminus_on_tensor(i,k,x)
-    else:
-        return sum( q3**(-i*(k+b))*skew_on_tensor(xminus_on_tensor(i,k+b,x),s([b])(twist)) for b in range(1,deg+1)) + q3**(-i*k)*xminus_on_tensor(i,k,x)
-
 def xplus(k,x):
     r"""
     Apply the full N-component raising generator ``x^{+}_k`` to a tensor product.
@@ -1545,29 +1516,6 @@ def xplus(k,x):
     """
     N = len(x.parent().tensor_factors())
     return sum(ring(u[i])*LAM(i,k,x) for i in range(N))
-
-def xminus(k,x):
-    r"""
-    Apply the full N-component lowering generator ``x^{-}_k`` to a tensor product.
-
-        x^{-}_k = sum_{i=0}^{N-1}  u_i^{-1} * Lambda^*_{i,k}
-
-    Parameters
-    ----------
-    k : int
-        Mode number.
-    x : element of ``Sym^{tensor N}``
-
-    Returns
-    -------
-    element of ``Sym^{tensor N}``
-
-    See Also
-    --------
-    xplus
-    """
-    N = len(x.parent().tensor_factors())
-    return sum(ring(1/u[i])*LAMast(i,k,x) for i in range(N))
 
 def testEigenfunction(mu):
     r"""
@@ -2377,11 +2325,44 @@ def x_fast(sgn, k, x):  # to be renamed!
     return const * sum(C * McdP(nu) for nu, (_, C) in state.items())
 
 def psi_fast(k,x):
+    r"""
+    Compute the action of the Cartan modes by direct application of
+    (dual) Pieri rules on the Macdonald basis, where:
+
+        psi_fast(k>0,x) == s[k]((1-q2)*(1-q3)*s[1]) * x
+        psi_fast(0,x)   == x
+        psi_fast(k<0,x) == x.skew_by(-(1-q1)*(1-q3)*s[1])
+
+    Parameters
+    ----------
+    k : int
+        Mode index. Positive adds boxes, negative removes boxes.
+    x : McdP element
+        The symmetric function to act on.
+
+    Returns
+    -------
+    McdP element
+
+    ALGORITHM
+    ---------
+    Effectively we use the quantum toroidal algebra commutation rule:
+
+        const * [x^{+}_{-k},x^{-}_{0}] == sgn(k) * psi_fast(k,x)
+
+    with
+
+        const == 1 / ( q3*(1-q1)*(1-q2)/(1-q3) )
+
+    """
     if x == 0:
-        return 0
+        return McdP.zero()
     if k == 0:
         return x
-    return sgn(k) * sum( (x2d(lam,-1)-x2d(mu,-1)) * coeff1 *  coeff2 * McdP(mu) for lam, coeff1 in x for mu, coeff2 in x_fast(1,-k,McdP(lam)) ) / ( q3*(1-q1)*(1-q2)/(1-q3) )
+    res = sgn(k) * sum( (x2d(lam,-1)-x2d(mu,-1)) * coeff1 *  coeff2 * McdP(mu) for lam, coeff1 in x for mu, coeff2 in x_fast(1,-k,McdP(lam)) ) / ( q3*(1-q1)*(1-q2)/(1-q3) )
+    if res == 0:
+        return McdP.zero()
+    return res
 
 def x_fast_on_tensor(i,sgn,k,x):
     parent = x.parent().tensor_factors()
@@ -2396,24 +2377,46 @@ def psi_fast_on_tensor(i,k,x):
                                +[parent[j](mu[j]) for j in range(i+1,len(mu))] ) for mu, coeff in x)
 
 def LAM_fast(i,k,x):
+    if not all(basis == McdP for basis in x.parent().tensor_factors()):
+        raise TypeError("input should be in the McdP basis")
     if i == 0:
         return x_fast_on_tensor(i,+1,k,x)
-    else:
-        res = 0
-        for mu, coeff in x:
-            for m in range(-k,sum(mu[i])+1):
-                base = coeff * x_fast_on_tensor(i,+1,m,mMcdP(mu))
-                for a in vectors_with_int(i,m-k):
-                    tmp = base
-                    for j in range(i):
-                        tmp = psi_fast_on_tensor(j,a[j],tmp)
-                    res += tmp
-        return res
+    res = 0
+    for mu, coeff in x:
+        for m in range(k,sum(mu[i])+1):
+            base = coeff * x_fast_on_tensor(i,+1,m,mMcdP(mu))
+            for a in vectors_with_int(i,m-k):
+                tmp = base
+                for j in range(i):
+                    tmp = psi_fast_on_tensor(j,a[j],tmp)
+                res += tmp
+    return res
+
+def LAM_star_fast(i, k, x):    # possibly absorb into a unique definition together with LAM_fast
+    parent = x.parent().tensor_factors()
+    N = len(parent)
+    if not all(basis == McdP for basis in parent):
+        raise TypeError("input should be in the McdP basis")
+    if i == N - 1:
+        return q3**(i*k) * x_fast_on_tensor(i, -1, k, x)
+    res = 0
+    for mu, coeff in x:
+        for a in product(*[range(sum(mu[j])+1) for j in range(i+1,N)]):
+            if not ( sum(a) >= k-sum(mu[i]) ):
+                continue
+            tmp = coeff * q3**(i*(k-sum(a))) * x_fast_on_tensor(i,-1,k-sum(a),mMcdP(mu))
+            for j in range(i+1,N):
+                tmp = (q2 * q3**j)**a[j-i-1] * psi_fast_on_tensor(j,-a[j-i-1],tmp)
+            res += tmp
+    return res
 
 def xplus_fast(k,x):
     N = len(x.parent().tensor_factors())
     return sum(ring(u[i])*LAM_fast(i,k,x) for i in range(N))
 
+def xminus_fast(k,x):
+    N = len(x.parent().tensor_factors())
+    return sum(ring(u[i]**-1)*LAM_star_fast(i,k,x) for i in range(N))
 
 def mMcdP(lam):
     r"""
