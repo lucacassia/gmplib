@@ -1541,7 +1541,7 @@ def testEigenfunction(mu):
     """
     poly = GMP(mu)
     poly = coercion_on_tensor(poly,[s]*len(mu))
-    return xplus(0,poly) == eigenvalue(mu)*poly     # to be updated to x_fast
+    return xplus(0,poly) == eigenvalue(mu)*poly     # to be updated to drinfeld(+1,0,poly)
 
 def framing(x,power=1):
     r"""
@@ -1653,7 +1653,7 @@ def GMMatrixElement(lam,nu):
     if len(lam) != len(nu):
         return 0
     degree = sum(map(sum,lam))
-    poly = xplus_fast(0,mMcdP(nu))
+    poly = drinfeld(+1,0,mMcdP(nu))
     return [poly[mu] - eigenvalue(lam)*Kronecker_delta(mu,nu) for mu in mPartitions(len(lam),degree)]
 
 def GMPC(lam,mu):
@@ -2376,47 +2376,43 @@ def psi_fast_on_tensor(i,k,x):
                                +[psi_fast(k,parent[i](mu[i]))]
                                +[parent[j](mu[j]) for j in range(i+1,len(mu))] ) for mu, coeff in x)
 
-def LAM_fast(i,k,x):
-    if not all(basis == McdP for basis in x.parent().tensor_factors()):
-        raise TypeError("input should be in the McdP basis")
-    if i == 0:
-        return x_fast_on_tensor(i,+1,k,x)
-    res = 0
-    for mu, coeff in x:
-        range_a = filter(lambda a:sum(a) <= sum(mu[i])-k, product(*[range(sum(mu[i])-k+1) for j in range(i)]))
-        range_j = range(i)
-        for a in range_a:
-            tmp = coeff * x_fast_on_tensor(i,+1,k+sum(a),mMcdP(mu))
-            for j in range_j:
-                tmp = psi_fast_on_tensor(j,a[j],tmp)
-            res += tmp
-    return res
-
-def LAM_star_fast(i, k, x):    # possibly absorb into a unique definition together with LAM_fast
+def LAM_fast(i,sgn,k,x):
     parent = x.parent().tensor_factors()
     N = len(parent)
-    if not all(basis == McdP for basis in parent):
+
+    if not all(basis == McdP for basis in x.parent().tensor_factors()):
         raise TypeError("input should be in the McdP basis")
-    if i == N - 1:
-        return q3**(i*k) * x_fast_on_tensor(i,-1,k,x)
+
+    if sgn > 0:
+        c_tmp_base = lambda a: 1
+        c_tmp_step = lambda idx,j,a: 1
+        range_j = range(i)
+        range_a = lambda i,k,mu:filter(lambda a:sum(a) <= sum(mu[i])-k, product(*[range(sum(mu[i])-k+1) for j in range_j]))
+        edge_case = 0
+    if sgn == 0:
+        raise TypeError("sgn cannot be zero")
+    if sgn < 0:
+        c_tmp_base = lambda a: q3**(i*(k-sum(a)))
+        c_tmp_step = lambda idx,j,a: (q2 * q3**j)**a[idx]
+        range_j = range(i+1,N)
+        range_a = lambda i,k,mu:filter(lambda a:-sum(a) <= sum(mu[i])-k, product(*[range(sum(mu[j])+1) for j in range_j]))
+        edge_case = N - 1
+
+    if i == edge_case:
+        return c_tmp_base([]) * x_fast_on_tensor(i,sgn,k,x)
+
     res = 0
     for mu, coeff in x:
-        range_a = filter(lambda a:-sum(a) <= sum(mu[i])-k, product(*[range(sum(mu[j])+1) for j in range(i+1,N)]))
-        range_j = range(i+1,N)
-        for a in range_a:
-            tmp = coeff * q3**(i*(k-sum(a))) * x_fast_on_tensor(i,-1,k-sum(a),mMcdP(mu))
-            for j in range_j:
-                tmp = (q2 * q3**j)**a[j-i-1] * psi_fast_on_tensor(j,-a[j-i-1],tmp)
+        for a in range_a(i,k,mu):
+            tmp = coeff * c_tmp_base(a) * x_fast_on_tensor(i,sgn,k+sgn*sum(a),mMcdP(mu))
+            for idx,j in enumerate(range_j):
+                tmp = c_tmp_step(idx,j,a) * psi_fast_on_tensor(j,sgn*a[idx],tmp)
             res += tmp
     return res
 
-def xplus_fast(k,x):
+def drinfeld(sgn,k,x):
     N = len(x.parent().tensor_factors())
-    return sum(ring(u[i])*LAM_fast(i,k,x) for i in range(N))
-
-def xminus_fast(k,x):
-    N = len(x.parent().tensor_factors())
-    return sum(ring(u[i]**-1)*LAM_star_fast(i,k,x) for i in range(N))
+    return sum( ring(u[i]**sgn) * LAM_fast(i,sgn,k,x) for i in range(N) )
 
 def mMcdP(lam):
     r"""
@@ -2454,7 +2450,7 @@ def XX(x):
     """
     if x == 0:
         return 0
-    return xplus_fast(0,x) - DD(x)
+    return drinfeld(+1,0,x) - DD(x)
 
 def magnus_exp(lam):
     r"""
