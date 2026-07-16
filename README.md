@@ -216,6 +216,7 @@ The repository includes several notebooks demonstrating the library:
 | `conjecture3_1.ipynb` | Checks of the conjectured identity 3.1 |
 | `level-2.ipynb` | Example computations of GMPs at level two |
 | `pieri.ipynb` | Pieri rules and dual Pieri rules |
+| `benchmark_kernel_vs_magnus.ipynb` | Performance comparison of different algorithms for computing GMPs |
 
 ---
 
