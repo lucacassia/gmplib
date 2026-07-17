@@ -59,7 +59,8 @@ The following symmetric function bases are pre-built on the base field:
 Caching
 -------
 GMP coefficients are expensive to compute. The library maintains a global dict
-``GMPC_cache`` that maps pairs of multi-partitions to their GMP coefficients.
+``GMPC_cache`` mapping each multi-partition ``lam`` to a dict of its GMP
+coefficients, ``GMPC_cache[lam][mu] == C(lam, mu)``.
 Use ``save_cache`` / ``load_cache`` to persist results between sessions.
 
 Examples
@@ -228,8 +229,9 @@ def cache_to_dict():
     Returns
     -------
     dict
-        The global ``GMPC_cache`` dictionary mapping pairs of multi-partitions
-        to rational functions in ``q, t``.
+        The global ``GMPC_cache`` dictionary, mapping each multi-partition
+        ``lam`` to a dict ``{mu: C(lam, mu)}`` of its GMP coefficients
+        (rational functions in ``q, t, u_i``).
     """
     global GMPC_cache
     return GMPC_cache
@@ -270,7 +272,6 @@ def load_cache(file_name):
 # ---------------------------------------------------------------------------
 
 from itertools import product,permutations
-from sympy.utilities.iterables import partitions
 
 def partitions_up_to_k(k):
     """
@@ -1694,21 +1695,22 @@ def GMPC(lam,mu):
 
     global GMPC_cache
     N = len(lam)
-    mp1 = tuple(map(Partition,lam))
-    mp2 = tuple(map(Partition,mu))
-    degree1 = sum(map(sum,mp1))
-    degree2 = sum(map(sum,mp2))
+    lam = tuple(map(Partition,lam))
+    mu = tuple(map(Partition,mu))
+    d_lam = sum(map(sum,lam))
+    d_mu = sum(map(sum,mu))
 
-    if degree1 != degree2:
+    if d_lam != d_mu:
         return 0
 
-    if degree1 == 0:
+    if d_lam == 0:
         return 1
 
     if N == 1:
-        for mp3 in mPartitions(N,degree1):
-            GMPC_cache[(mp1,mp3)] = Kronecker_delta(mp1,mp3)
-        return GMPC_cache[(mp1,mp2)]
+        GMPC_cache.setdefault(lam, {})
+        for nu in mPartitions(N,d_lam):
+            GMPC_cache[lam][nu] = Kronecker_delta(lam,nu)
+        return GMPC_cache[lam][mu]
 
     if lam[-1] == []:
         if mu[-1] == []:
@@ -1717,15 +1719,16 @@ def GMPC(lam,mu):
             return 0
 
     try:
-        return GMPC_cache[(mp1,mp2)]
+        return GMPC_cache[lam][mu]
 
     except KeyError:
-        mparts = mPartitions(N,degree2)
-        M = matrix([GMMatrixElement(mp1,b) for b in mparts])
+        mparts = mPartitions(N,d_lam)
+        M = matrix([GMMatrixElement(lam,nu) for nu in mparts])
         null_vec = M.kernel().basis()[0]
+        GMPC_cache.setdefault(lam, {})
         for i in range(len(mparts)):
-            GMPC_cache[(mp1,mparts[i])] = null_vec[i]
-        return GMPC_cache[(mp1,mp2)]
+            GMPC_cache[lam][mparts[i]] = null_vec[i]
+        return GMPC_cache[lam][mu]
 
 def GMP(lam):
     r"""

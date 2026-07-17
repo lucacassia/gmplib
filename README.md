@@ -38,7 +38,6 @@ Both should agree; comparing them is a useful correctness check on a new install
 ## Installation and requirements
 
 - [SageMath](https://www.sagemath.org/) ≥ 9.0
-- [SymPy](https://www.sympy.org/)
 
 No additional installation is needed beyond cloning the repository:
 
